@@ -15,6 +15,9 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Random;
 
+import okhttp3.OkHttpClient;
+import okhttp3.internal.Internal;
+
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertTrue;
 
@@ -43,16 +46,25 @@ public class MainActivity extends Activity {
                         return ProxyBuilder.callSuper(proxy, method, args);
                     }
                 };
-                A debugRandom = null;
+                Internal internalProxy = null;
                 try {
-                    debugRandom = ProxyBuilder.forClass(A.class)
+                    internalProxy = ProxyBuilder.forClass(Internal.class)
                             .dexCache(MainActivity.this.getDir("dx", Context.MODE_PRIVATE))
                             .handler(handler)
                             .build();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                debugRandom.b();
+                //internalProxy.b();
+            }
+        });
+        findViewById(R.id.button2).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                OkHttpClient client = new OkHttpClient();
+
+
+                NetUtils.testOKHttpExecute();
             }
         });
     }
