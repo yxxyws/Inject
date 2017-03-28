@@ -8,6 +8,11 @@ import android.util.Log;
 
 public final class A {
 
+    final int value;
+    A(){
+        value = 10;
+    }
+
     public void b(){
         Log.d("hehe","call origin b");
     }

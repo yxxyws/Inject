@@ -10,6 +10,7 @@ import android.view.View;
 import com.android.dx.stock.ProxyBuilder;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -26,6 +27,7 @@ import static junit.framework.Assert.assertTrue;
  */
 
 public class MainActivity extends Activity {
+    A a = new A();
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -40,30 +42,55 @@ public class MainActivity extends Activity {
                     @Override
                     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
                         if (method.getName().equals("b")) {
-                            // Chosen by fair dice roll, guaranteed to be random.
                             System.out.println("inject");
                         }
                         return ProxyBuilder.callSuper(proxy, method, args);
                     }
                 };
-                Internal internalProxy = null;
+                A a = null;
                 try {
-                    internalProxy = ProxyBuilder.forClass(Internal.class)
+                    a = ProxyBuilder.forClass(A.class)
                             .dexCache(MainActivity.this.getDir("dx", Context.MODE_PRIVATE))
                             .handler(handler)
                             .build();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                //internalProxy.b();
+                a.b();
             }
         });
         findViewById(R.id.button2).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 OkHttpClient client = new OkHttpClient();
+                NetUtils.testOKHttpExecute();
+            }
+        });
 
+        findViewById(R.id.button3).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Field f = null;
+                try {
+                    f = A.class.getDeclaredField("value");
+                    f.setAccessible(true);
+                    System.out.println("value:" + f.getInt(a));
+                    f.setInt(a, 2);
+                    System.out.println("value:" + f.getInt(a));
+                } catch (NoSuchFieldException e) {
+                    e.printStackTrace();
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        findViewById(R.id.button4).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                OkHttpClient oldClient = new OkHttpClient();
+                Internal.instance = new ProxyInternal(Internal.instance);
 
+                OkHttpClient client = new OkHttpClient();
                 NetUtils.testOKHttpExecute();
             }
         });
