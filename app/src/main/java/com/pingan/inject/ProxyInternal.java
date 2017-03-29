@@ -1,5 +1,7 @@
 package com.pingan.inject;
 
+import android.content.Context;
+
 import java.lang.reflect.Field;
 import java.net.MalformedURLException;
 import java.net.Socket;
@@ -30,10 +32,12 @@ import okhttp3.internal.connection.StreamAllocation;
 
 public class ProxyInternal extends Internal {
     Internal internal;
+    Context staticContext;
 
-    public ProxyInternal(Internal internal) {
+    public ProxyInternal(Context staticContext, Internal internal) {
         this.internal = internal;
         TimeDevice.getInstance();
+        this.staticContext = staticContext;
     }
 
     @Override
@@ -54,21 +58,38 @@ public class ProxyInternal extends Internal {
     @Override
     public RealConnection get(ConnectionPool pool, Address address, StreamAllocation streamAllocation, Route route) {
         try {
-            Field socketFactoryField = null;
-            socketFactoryField = Address.class.getDeclaredField("socketFactory");
-            socketFactoryField.setAccessible(true);
-            Object socketFactoryObect = socketFactoryField.get(address);
-            if(socketFactoryObect != null && !(socketFactoryObect instanceof ProxySocketFactory) ) {
-                ProxySocketFactory socketFactory = new ProxySocketFactory(socketFactoryObect, address);
-                socketFactoryField.set(address, socketFactory);
+            if(address.sslSocketFactory() == null) {
+                Field socketFactoryField = null;
+                socketFactoryField = Address.class.getDeclaredField("socketFactory");
+                socketFactoryField.setAccessible(true);
+                Object socketFactoryObect = socketFactoryField.get(address);
+                if (socketFactoryObect != null && !(socketFactoryObect instanceof ProxySocketFactory)) {
+                    ProxySocketFactory socketFactory = new ProxySocketFactory(socketFactoryObect, address);
+                    socketFactoryField.set(address, socketFactory);
+                    TimeDevice.getInstance().startRecord(address);
+                } else {
+                    return internal.get(pool, address, streamAllocation, route);
+                }
+            }
+
+            if(address.sslSocketFactory() != null && !address.sslSocketFactory().getClass().getName().contains("Proxy")) {
+                Field sslSocketFactoryField = Address.class.getDeclaredField("sslSocketFactory");
+                sslSocketFactoryField.setAccessible(true);
+                Object sslSocketFactoryObject = sslSocketFactoryField.get(address);
+                if (sslSocketFactoryObject != null) {
+                    Object factory = ProxyFactory.getSSLSocketFactoryProxy(staticContext, sslSocketFactoryObject, address);
+                    sslSocketFactoryField.set(address, factory);
+                }
                 TimeDevice.getInstance().startRecord(address);
             }
-            Field sslSocketFactoryField = Address.class.getDeclaredField("sslSocketFactory");
-            sslSocketFactoryField.setAccessible(true);
-            Object sslSocketFactoryObject = sslSocketFactoryField.get(address);
-            if(sslSocketFactoryObject != null && !(sslSocketFactoryObject instanceof ProxySSLSocketFactory)) {
-                ProxySSLSocketFactory factory = new ProxySSLSocketFactory(sslSocketFactoryObject, address);
-                sslSocketFactoryField.set(address, factory);
+
+            Field DNSField = null;
+            DNSField = Address.class.getDeclaredField("dns");
+            DNSField.setAccessible(true);
+            Object dnsObject = DNSField.get(address);
+            if(dnsObject != null) {
+                Object newDnsObject = ProxyFactory.getDnsProxy(staticContext, dnsObject, address);
+                DNSField.set(address, newDnsObject);
             }
         } catch (NoSuchFieldException e) {
             e.printStackTrace();

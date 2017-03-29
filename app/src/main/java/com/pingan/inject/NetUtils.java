@@ -18,7 +18,7 @@ public class NetUtils {
 
     public static void testOKHttpExecute(){
         OkHttpClient client = new OkHttpClient();
-        String url = "http://www.baidu.com";
+        String url = "https://www.baidu.com";
         Request request = new Request.Builder().url(url).build();
         client.newCall(request).enqueue(new Callback() {
             @Override

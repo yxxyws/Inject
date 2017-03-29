@@ -87,12 +87,15 @@ public class MainActivity extends Activity {
         findViewById(R.id.button4).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                OkHttpClient oldClient = new OkHttpClient();
-                Internal.instance = new ProxyInternal(Internal.instance);
+                //OkHttpClient oldClient = new OkHttpClient();
+                //Internal.instance = new ProxyInternal(MainActivity.this.getApplication(), Internal.instance);
+
+                InjectCenter.init(MainActivity.this.getApplicationContext());
 
                 OkHttpClient client = new OkHttpClient();
                 NetUtils.testOKHttpExecute();
             }
         });
+
     }
 }

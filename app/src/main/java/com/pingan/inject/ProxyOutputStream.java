@@ -14,8 +14,8 @@ public class ProxyOutputStream extends OutputStream {
     OutputStream rawStream;
     Object address;
 
-    public ProxyOutputStream(OutputStream stream, Object address) {
-        rawStream = stream;
+    public ProxyOutputStream(Object stream, Object address) {
+        rawStream = (OutputStream)stream;
         this.address = address;
     }
 
@@ -24,7 +24,7 @@ public class ProxyOutputStream extends OutputStream {
         try {
             rawStream.write(b);
         } catch (IOException e) {
-            TimeDevice.getInstance().endRecord(address, 1);
+            TimeDevice.getInstance().endRecord(address, TimeDevice.OUPUT_IO);
             throw e;
         }
     }
@@ -34,7 +34,7 @@ public class ProxyOutputStream extends OutputStream {
         try {
             rawStream.write(b);
         } catch (IOException e) {
-            TimeDevice.getInstance().endRecord(address, 1);
+            TimeDevice.getInstance().endRecord(address, TimeDevice.OUPUT_IO);
             throw e;
         }
     }
@@ -44,7 +44,7 @@ public class ProxyOutputStream extends OutputStream {
         try {
             rawStream.write(b, off, len);
         } catch (IOException e) {
-            TimeDevice.getInstance().endRecord(address, 1);
+            TimeDevice.getInstance().endRecord(address, TimeDevice.OUPUT_IO);
             throw e;
         }
     }
@@ -53,9 +53,8 @@ public class ProxyOutputStream extends OutputStream {
     public void flush() throws IOException {
         try {
             rawStream.flush();
-            TimeDevice.getInstance().endRecord(address, 0);
         } catch (IOException e) {
-            TimeDevice.getInstance().endRecord(address, 1);
+            TimeDevice.getInstance().endRecord(address, TimeDevice.OUPUT_IO);
             throw e;
         }
     }
@@ -65,7 +64,7 @@ public class ProxyOutputStream extends OutputStream {
         try {
             rawStream.close();
         } catch (IOException e) {
-            TimeDevice.getInstance().endRecord(address, 1);
+            TimeDevice.getInstance().endRecord(address, TimeDevice.OUPUT_IO);
             throw e;
         }
     }

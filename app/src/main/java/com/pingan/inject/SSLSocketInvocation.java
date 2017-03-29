@@ -7,11 +7,11 @@ import java.lang.reflect.Method;
  * Created by yunyang on 2017/3/27.
  */
 
-public class InvocationSocketHandler implements InvocationHandler {
+public class SSLSocketInvocation implements InvocationHandler {
 
     Object rawSocket;
     Object address;
-    public InvocationSocketHandler(Object rawSocket, Object address){
+    public SSLSocketInvocation(Object rawSocket, Object address){
         this.rawSocket = rawSocket;
         this.address = address;
     }
@@ -27,7 +27,7 @@ public class InvocationSocketHandler implements InvocationHandler {
             Object result = method.invoke(rawSocket, args);
             return result;
         }catch(Exception e){
-            TimeDevice.getInstance().endRecord(address, 1);
+            TimeDevice.getInstance().endRecord(address, TimeDevice.OTHER);
             throw e;
         }
     }

@@ -5,6 +5,7 @@ import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 
+import java.sql.Struct;
 import java.util.HashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
@@ -20,16 +21,24 @@ import okhttp3.Address;
 
 public class TimeDevice {
 
+    public static final int NORMAL = 0;
+    public static final int CONNECTION = 1;
+    public static final int DNS = 2;
+    public static final int INPUT_IO = 3;
+    public static final int OUPUT_IO = 4;
+    public static final int CLOSE = 5;
+    public static final int OTHER = 6;
+
     private static TimeDevice instance;
 
     private TimeDevice() {
     }
 
     Handler mHandler;
-    HashMap<String, NetRecordStruct> recordMap = new HashMap<>();
+    HashMap<Long, NetRecordStruct> recordMap = new HashMap<>();
+    HashMap<Long, NetRecordStruct> cacheMap = new HashMap<>();
 
     private static final ExecutorService executor = Executors.newSingleThreadExecutor();
-    ;
 
     public static TimeDevice getInstance() {
         if (instance == null) {
@@ -54,18 +63,25 @@ public class TimeDevice {
         public void handleMessage(Message msg) {
             NetRecordStruct struct = (NetRecordStruct) msg.obj;
             synchronized (instance.recordMap) {
-                NetRecordStruct last = instance.recordMap.get(struct.threadName);
+                NetRecordStruct last = instance.recordMap.get(struct.threadId);
                 if (struct.startOrEnd) {
                     if (last != null) {
                         throw new RuntimeException("check code, start and end not match");
-                    } else
-                        instance.recordMap.put(struct.threadName, struct);
+                    } else {
+                        instance.recordMap.put(struct.threadId, struct);
+                        instance.cacheMap.remove(struct.threadId);
+                        Log.d("TimeDevice", "start " + struct.toString());
+                    }
                 } else {
                     if (last != null) {
                         Log.d("TimeDevice", (struct.endState == 0 ? "success" : "failed") + " cost time " + (struct.timeStamp - last.timeStamp) + "ms  " + struct.toString());
-                        instance.recordMap.remove(struct.threadName);
+                        instance.recordMap.remove(struct.threadId);
+                        instance.cacheMap.put(struct.threadId, struct);
                     } else {
-                        Log.d("TimeDevice", struct.toString());
+                        last = instance.cacheMap.get(struct.threadId);
+                        if (last!=null) {
+                            Log.d("TimeDevice", (struct.endState == 0 ? "success" : "failed") + " cost time " + (struct.timeStamp - last.timeStamp) + "ms  " + struct.toString());
+                        }
                     }
                 }
             }
@@ -74,33 +90,32 @@ public class TimeDevice {
     };
 
     public void startRecord(Object obj) {
-        String threadName = Thread.currentThread().getName();
+        long threadId = Thread.currentThread().getId();
         long time = System.currentTimeMillis();
         Message message = mHandler.obtainMessage();
         Object address = obj;
-        message.obj = new NetRecordStruct(true, address.toString(), threadName, time, 0);
+        message.obj = new NetRecordStruct(true, address.toString(), threadId, time, 0);
         mHandler.sendMessage(message);
     }
 
     public void endRecord(Object obj, int endState) {
-        String threadName = Thread.currentThread().getName();
+        long threadId = Thread.currentThread().getId();
         long time = System.currentTimeMillis();
         Message message = mHandler.obtainMessage();
-        Address address = (Address) obj;
-        message.obj = new NetRecordStruct(false, address.toString(), threadName, time, endState);
+        message.obj = new NetRecordStruct(false, obj.toString(), threadId, time, endState);
         mHandler.sendMessage(message);
     }
 
     private class NetRecordStruct {
         String url;
-        String threadName;
+        long threadId;
         long timeStamp;
         boolean startOrEnd;
         int endState;
 
-        public NetRecordStruct(boolean startOrEnd, String url, String threadName, long timestamp, int endState) {
+        public NetRecordStruct(boolean startOrEnd, String url, long threadId, long timestamp, int endState) {
             this.url = url;
-            this.threadName = threadName;
+            this.threadId = threadId;
             this.timeStamp = timestamp;
             this.startOrEnd = startOrEnd;
             this.endState = endState;
@@ -108,7 +123,7 @@ public class TimeDevice {
 
         @Override
         public String toString() {
-            return threadName + "---" + url + "---" + (startOrEnd ? "start" : "end") + "---" + timeStamp;
+            return threadId + "---" + url + "---" + (startOrEnd ? "start" : "end") + "---" + timeStamp;
         }
     }
 }

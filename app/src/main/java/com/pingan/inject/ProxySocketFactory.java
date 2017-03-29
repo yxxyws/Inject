@@ -29,7 +29,7 @@ public class ProxySocketFactory extends SocketFactory {
             socket = new ProxySocket(socket, this.address);
             return socket;
         } catch (IOException e) {
-            TimeDevice.getInstance().endRecord(address, 1);
+            TimeDevice.getInstance().endRecord(address, TimeDevice.OTHER);
             throw e;
         }
     }
@@ -41,7 +41,7 @@ public class ProxySocketFactory extends SocketFactory {
             socket = new ProxySocket(socket, this.address);
             return socket;
         } catch (IOException e) {
-            TimeDevice.getInstance().endRecord(address, 1);
+            TimeDevice.getInstance().endRecord(address, TimeDevice.OTHER);
             throw e;
         }
     }
@@ -54,7 +54,7 @@ public class ProxySocketFactory extends SocketFactory {
             socket = new ProxySocket(socket, this.address);
             return socket;
         } catch (IOException e) {
-            TimeDevice.getInstance().endRecord(address, 1);
+            TimeDevice.getInstance().endRecord(address, TimeDevice.OTHER);
             throw e;
         }
     }
@@ -66,7 +66,7 @@ public class ProxySocketFactory extends SocketFactory {
             socket = new ProxySocket(socket, this.address);
             return socket;
         } catch (IOException e) {
-            TimeDevice.getInstance().endRecord(address, 1);
+            TimeDevice.getInstance().endRecord(address, TimeDevice.OTHER);
             throw e;
         }
     }
@@ -79,7 +79,7 @@ public class ProxySocketFactory extends SocketFactory {
             socket = new ProxySocket(socket, this.address);
             return socket;
         } catch (IOException e) {
-            TimeDevice.getInstance().endRecord(address, 1);
+            TimeDevice.getInstance().endRecord(address, TimeDevice.OTHER);
             throw e;
         }
     }

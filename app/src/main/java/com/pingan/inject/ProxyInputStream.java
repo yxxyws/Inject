@@ -16,17 +16,19 @@ public class ProxyInputStream extends InputStream {
     InputStream rawInputStream;
     Object address;
 
-    public ProxyInputStream(InputStream stream, Object address) {
-        rawInputStream = stream;
+    public ProxyInputStream(Object stream, Object address) {
+        rawInputStream = (InputStream)stream;
         this.address = address;
     }
 
     @Override
     public int read() throws IOException {
         try {
-            return rawInputStream.read();
+            int ret = rawInputStream.read();
+            TimeDevice.getInstance().endRecord(address, TimeDevice.NORMAL);
+            return ret;
         } catch (IOException e) {
-            TimeDevice.getInstance().endRecord(address, 1);
+            TimeDevice.getInstance().endRecord(address, TimeDevice.INPUT_IO);
             throw e;
         }
     }
@@ -34,9 +36,11 @@ public class ProxyInputStream extends InputStream {
     @Override
     public int read(byte[] b) throws IOException {
         try {
-            return rawInputStream.read(b);
+            int ret = rawInputStream.read(b);
+            TimeDevice.getInstance().endRecord(address, TimeDevice.NORMAL);
+            return ret;
         } catch (IOException e) {
-            TimeDevice.getInstance().endRecord(address, 1);
+            TimeDevice.getInstance().endRecord(address, TimeDevice.INPUT_IO);
             throw e;
         }
     }
@@ -44,9 +48,11 @@ public class ProxyInputStream extends InputStream {
     @Override
     public int read(byte[] b, int off, int len) throws IOException {
         try {
-            return rawInputStream.read(b, off, len);
+            int ret = rawInputStream.read(b, off, len);
+            TimeDevice.getInstance().endRecord(address, TimeDevice.NORMAL);
+            return ret;
         } catch (IOException e) {
-            TimeDevice.getInstance().endRecord(address, 1);
+            TimeDevice.getInstance().endRecord(address, TimeDevice.INPUT_IO);
             throw e;
         }
     }
@@ -56,7 +62,7 @@ public class ProxyInputStream extends InputStream {
         try {
             return rawInputStream.skip(n);
         } catch (IOException e) {
-            TimeDevice.getInstance().endRecord(address, 1);
+            TimeDevice.getInstance().endRecord(address, TimeDevice.INPUT_IO);
             throw e;
         }
     }
@@ -66,7 +72,7 @@ public class ProxyInputStream extends InputStream {
         try {
             return rawInputStream.available();
         } catch (IOException e) {
-            TimeDevice.getInstance().endRecord(address, 1);
+            TimeDevice.getInstance().endRecord(address, TimeDevice.INPUT_IO);
             throw e;
         }
     }
@@ -76,7 +82,7 @@ public class ProxyInputStream extends InputStream {
         try {
             rawInputStream.close();
         } catch (IOException e) {
-            TimeDevice.getInstance().endRecord(address, 1);
+            TimeDevice.getInstance().endRecord(address, TimeDevice.INPUT_IO);
             throw e;
         }
     }
@@ -86,7 +92,7 @@ public class ProxyInputStream extends InputStream {
         try {
             rawInputStream.mark(readlimit);
         } catch (Exception e) {
-            TimeDevice.getInstance().endRecord(address, 1);
+            TimeDevice.getInstance().endRecord(address, TimeDevice.INPUT_IO);
             throw e;
         }
     }
@@ -96,7 +102,7 @@ public class ProxyInputStream extends InputStream {
         try {
             rawInputStream.reset();
         } catch (IOException e) {
-            TimeDevice.getInstance().endRecord(address, 1);
+            TimeDevice.getInstance().endRecord(address, TimeDevice.INPUT_IO);
             throw e;
         }
     }
@@ -106,7 +112,7 @@ public class ProxyInputStream extends InputStream {
         try {
             return rawInputStream.markSupported();
         } catch (Exception e) {
-            TimeDevice.getInstance().endRecord(address, 1);
+            TimeDevice.getInstance().endRecord(address, TimeDevice.INPUT_IO);
             throw e;
         }
     }

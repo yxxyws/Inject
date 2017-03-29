@@ -33,7 +33,7 @@ public class ProxySocket extends Socket {
         try {
             realSocket.connect(endpoint);
         } catch (IOException e) {
-            TimeDevice.getInstance().endRecord(address, 1);
+            TimeDevice.getInstance().endRecord(address, TimeDevice.CONNECTION);
             throw e;
         }
     }
@@ -43,7 +43,7 @@ public class ProxySocket extends Socket {
         try {
             realSocket.connect(endpoint, timeout);
         } catch (IOException e) {
-            TimeDevice.getInstance().endRecord(address, 1);
+            TimeDevice.getInstance().endRecord(address, TimeDevice.CONNECTION);
             throw e;
         }
     }
@@ -53,7 +53,7 @@ public class ProxySocket extends Socket {
         try {
             realSocket.bind(bindpoint);
         } catch (IOException e) {
-            TimeDevice.getInstance().endRecord(address, 1);
+            TimeDevice.getInstance().endRecord(address, TimeDevice.CONNECTION);
             throw e;
         }
     }
@@ -102,7 +102,7 @@ public class ProxySocket extends Socket {
             }
             return result;
         } catch (IOException e) {
-            TimeDevice.getInstance().endRecord(address, 1);
+            TimeDevice.getInstance().endRecord(address, TimeDevice.INPUT_IO);
             throw e;
         }
     }
@@ -116,7 +116,7 @@ public class ProxySocket extends Socket {
             }
             return result;
         } catch (IOException e) {
-            TimeDevice.getInstance().endRecord(address, 1);
+            TimeDevice.getInstance().endRecord(address, TimeDevice.OUPUT_IO);
             throw e;
         }
     }
@@ -126,7 +126,7 @@ public class ProxySocket extends Socket {
         try {
             realSocket.setTcpNoDelay(on);
         } catch (IOException e) {
-            TimeDevice.getInstance().endRecord(address, 1);
+            TimeDevice.getInstance().endRecord(address, TimeDevice.CONNECTION);
             throw e;
         }
     }
@@ -136,7 +136,7 @@ public class ProxySocket extends Socket {
         try {
             return realSocket.getTcpNoDelay();
         } catch (IOException e) {
-            TimeDevice.getInstance().endRecord(address, 1);
+            TimeDevice.getInstance().endRecord(address, TimeDevice.CONNECTION);
             throw e;
         }
     }
@@ -146,7 +146,7 @@ public class ProxySocket extends Socket {
         try {
             realSocket.setSoLinger(on, linger);
         } catch (IOException e) {
-            TimeDevice.getInstance().endRecord(address, 1);
+            TimeDevice.getInstance().endRecord(address, TimeDevice.CONNECTION);
             throw e;
         }
     }
@@ -156,7 +156,7 @@ public class ProxySocket extends Socket {
         try {
             return realSocket.getSoLinger();
         } catch (IOException e) {
-            TimeDevice.getInstance().endRecord(address, 1);
+            TimeDevice.getInstance().endRecord(address, TimeDevice.CONNECTION);
             throw e;
         }
     }
@@ -166,7 +166,7 @@ public class ProxySocket extends Socket {
         try {
             realSocket.sendUrgentData(data);
         } catch (IOException e) {
-            TimeDevice.getInstance().endRecord(address, 1);
+            TimeDevice.getInstance().endRecord(address, TimeDevice.CONNECTION);
             throw e;
         }
     }
@@ -176,7 +176,7 @@ public class ProxySocket extends Socket {
         try {
             realSocket.setOOBInline(on);
         } catch (IOException e) {
-            TimeDevice.getInstance().endRecord(address, 1);
+            TimeDevice.getInstance().endRecord(address, TimeDevice.CONNECTION);
             throw e;
         }
     }
@@ -186,7 +186,7 @@ public class ProxySocket extends Socket {
         try {
             return realSocket.getOOBInline();
         } catch (IOException e) {
-            TimeDevice.getInstance().endRecord(address, 1);
+            TimeDevice.getInstance().endRecord(address, TimeDevice.CONNECTION);
             throw e;
         }
     }
@@ -196,7 +196,7 @@ public class ProxySocket extends Socket {
         try {
             realSocket.setSoTimeout(timeout);
         } catch (IOException e) {
-            TimeDevice.getInstance().endRecord(address, 1);
+            TimeDevice.getInstance().endRecord(address, TimeDevice.CONNECTION);
             throw e;
         }
     }
@@ -206,7 +206,7 @@ public class ProxySocket extends Socket {
         try {
             return realSocket.getSoTimeout();
         } catch (IOException e) {
-            TimeDevice.getInstance().endRecord(address, 1);
+            TimeDevice.getInstance().endRecord(address, TimeDevice.CONNECTION);
             throw e;
         }
     }
@@ -216,7 +216,7 @@ public class ProxySocket extends Socket {
         try {
             realSocket.setSendBufferSize(size);
         } catch (IOException e) {
-            TimeDevice.getInstance().endRecord(address, 1);
+            TimeDevice.getInstance().endRecord(address, TimeDevice.CONNECTION);
             throw e;
         }
     }
@@ -226,7 +226,7 @@ public class ProxySocket extends Socket {
         try {
             return realSocket.getSendBufferSize();
         } catch (IOException e) {
-            TimeDevice.getInstance().endRecord(address, 1);
+            TimeDevice.getInstance().endRecord(address, TimeDevice.CONNECTION);
             throw e;
         }
     }
@@ -236,7 +236,7 @@ public class ProxySocket extends Socket {
         try {
             realSocket.setReceiveBufferSize(size);
         } catch (IOException e) {
-            TimeDevice.getInstance().endRecord(address, 1);
+            TimeDevice.getInstance().endRecord(address, TimeDevice.CONNECTION);
             throw e;
         }
     }
@@ -246,7 +246,7 @@ public class ProxySocket extends Socket {
         try {
             return realSocket.getReceiveBufferSize();
         } catch (IOException e) {
-            TimeDevice.getInstance().endRecord(address, 1);
+            TimeDevice.getInstance().endRecord(address, TimeDevice.CONNECTION);
             throw e;
         }
     }
@@ -256,7 +256,7 @@ public class ProxySocket extends Socket {
         try {
             realSocket.setKeepAlive(on);
         } catch (IOException e) {
-            TimeDevice.getInstance().endRecord(address, 1);
+            TimeDevice.getInstance().endRecord(address, TimeDevice.CONNECTION);
             throw e;
         }
     }
@@ -266,7 +266,7 @@ public class ProxySocket extends Socket {
         try {
             return realSocket.getKeepAlive();
         } catch (IOException e) {
-            TimeDevice.getInstance().endRecord(address, 1);
+            TimeDevice.getInstance().endRecord(address, TimeDevice.CONNECTION);
             throw e;
         }
     }
@@ -276,7 +276,7 @@ public class ProxySocket extends Socket {
         try {
             realSocket.setTrafficClass(tc);
         } catch (IOException e) {
-            TimeDevice.getInstance().endRecord(address, 1);
+            TimeDevice.getInstance().endRecord(address, TimeDevice.CONNECTION);
             throw e;
         }
     }
@@ -286,7 +286,7 @@ public class ProxySocket extends Socket {
         try {
             return realSocket.getTrafficClass();
         } catch (IOException e) {
-            TimeDevice.getInstance().endRecord(address, 1);
+            TimeDevice.getInstance().endRecord(address, TimeDevice.CONNECTION);
             throw e;
         }
     }
@@ -296,7 +296,7 @@ public class ProxySocket extends Socket {
         try {
             realSocket.setReuseAddress(on);
         } catch (IOException e) {
-            TimeDevice.getInstance().endRecord(address, 1);
+            TimeDevice.getInstance().endRecord(address, TimeDevice.CONNECTION);
             throw e;
         }
     }
@@ -306,7 +306,7 @@ public class ProxySocket extends Socket {
         try {
             return realSocket.getReuseAddress();
         } catch (IOException e) {
-            TimeDevice.getInstance().endRecord(address, 1);
+            TimeDevice.getInstance().endRecord(address, TimeDevice.CONNECTION);
             throw e;
         }
     }
@@ -316,7 +316,7 @@ public class ProxySocket extends Socket {
         try {
             realSocket.close();
         } catch (IOException e) {
-            TimeDevice.getInstance().endRecord(address, 1);
+            TimeDevice.getInstance().endRecord(address, TimeDevice.CLOSE);
             throw e;
         }
     }
@@ -326,7 +326,7 @@ public class ProxySocket extends Socket {
         try {
             realSocket.shutdownInput();
         } catch (IOException e) {
-            TimeDevice.getInstance().endRecord(address, 1);
+            TimeDevice.getInstance().endRecord(address, TimeDevice.CLOSE);
             throw e;
         }
     }
@@ -336,7 +336,7 @@ public class ProxySocket extends Socket {
         try {
             realSocket.shutdownOutput();
         } catch (IOException e) {
-            TimeDevice.getInstance().endRecord(address, 1);
+            TimeDevice.getInstance().endRecord(address, TimeDevice.CLOSE);
             throw e;
         }
     }
