@@ -4,7 +4,6 @@ import android.content.Context;
 
 import com.android.dx.stock.ProxyBuilder;
 
-import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
