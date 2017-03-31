@@ -7,19 +7,17 @@ import java.net.UnknownHostException;
 
 import javax.net.SocketFactory;
 
-import okhttp3.Address;
-
 /**
  * Created by yunyang on 2017/3/25.
  */
 
 public class ProxySocketFactory extends SocketFactory {
     private final SocketFactory factory;
-    Address address;
+    Object address;//有可能为空
 
     public ProxySocketFactory(Object factory, Object address) {
         this.factory = (SocketFactory) factory;
-        this.address = (Address) address;
+        this.address = (Object) address;
     }
 
     @Override

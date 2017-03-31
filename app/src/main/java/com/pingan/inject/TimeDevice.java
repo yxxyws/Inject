@@ -5,15 +5,9 @@ import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 
-import java.sql.Struct;
 import java.util.HashMap;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
-
-import okhttp3.Address;
 
 /**
  * Created by yunyang on 2017/3/27.
@@ -74,13 +68,13 @@ public class TimeDevice {
                     }
                 } else {
                     if (last != null) {
-                        Log.d("TimeDevice", (struct.endState == 0 ? "success" : "failed") + " cost time " + (struct.timeStamp - last.timeStamp) + "ms  " + struct.toString());
+                        Log.d("TimeDevice", (struct.endState == 0 ? "success" : "failed") + " cost time " + (struct.timeStamp - last.timeStamp) + "ms  " + last.toString());
                         instance.recordMap.remove(struct.threadId);
                         instance.cacheMap.put(struct.threadId, struct);
                     } else {
                         last = instance.cacheMap.get(struct.threadId);
                         if (last!=null) {
-                            Log.d("TimeDevice", (struct.endState == 0 ? "success" : "failed") + " cost time " + (struct.timeStamp - last.timeStamp) + "ms  " + struct.toString());
+                            Log.d("TimeDevice", (struct.endState == 0 ? "success" : "failed") + " cost time " + (struct.timeStamp - last.timeStamp) + "ms  " + last.toString());
                         }
                     }
                 }
@@ -102,7 +96,11 @@ public class TimeDevice {
         long threadId = Thread.currentThread().getId();
         long time = System.currentTimeMillis();
         Message message = mHandler.obtainMessage();
-        message.obj = new NetRecordStruct(false, obj.toString(), threadId, time, endState);
+        if(obj != null) {
+            message.obj = new NetRecordStruct(false, obj.toString(), threadId, time, endState);
+        }else{
+            message.obj = new NetRecordStruct(false, "", threadId, time, endState);
+        }
         mHandler.sendMessage(message);
     }
 

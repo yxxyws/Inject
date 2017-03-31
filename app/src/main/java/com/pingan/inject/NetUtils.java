@@ -1,14 +1,10 @@
 package com.pingan.inject;
 
+import com.squareup.okhttp.*;
+
 import java.io.IOException;
 
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.FormBody;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
+
 
 /**
  * Created by yunyang on 2017/3/23.
@@ -16,22 +12,54 @@ import okhttp3.Response;
 
 public class NetUtils {
 
-    public static void testOKHttpExecute(){
-        OkHttpClient client = new OkHttpClient();
-        String url = "https://www.baidu.com";
-        Request request = new Request.Builder().url(url).build();
-        client.newCall(request).enqueue(new Callback() {
+    public static void testOKHttpV3Execute(String url){
+        okhttp3.OkHttpClient client = new okhttp3.OkHttpClient();
+        //Internal.instance = new ProxyInternalV2(Internal.instance);
+        okhttp3.Request request = new okhttp3.Request.Builder().url(url).build();
+        client.newCall(request).enqueue(new okhttp3.Callback() {
+//            @Override
+//            public void onFailure(okhttp3.Request request, IOException e) {
+//                e.printStackTrace();
+//            }
+//
+//            @Override
+//            public void onResponse(Response response) throws IOException {
+//                if(response.isSuccessful()){
+//                    String msg = response.message();
+//                }
+//            }
             @Override
-            public void onFailure(Call call, IOException e) {
+            public void onFailure(okhttp3.Call call, IOException e) {
                 e.printStackTrace();
             }
 
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
+            public void onResponse(okhttp3.Call call, okhttp3.Response response) throws IOException {
                 if(response.isSuccessful()){
                     String msg = response.message();
                 }
             }
+        });
+
+    }
+
+    public static void testOKHttpV2Execute(String url){
+        OkHttpClient client = new OkHttpClient();
+        //Internal.instance = new ProxyInternalV2(Internal.instance);
+        Request request = new Request.Builder().url(url).build();
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Request request, IOException e) {
+                e.printStackTrace();
+            }
+
+            @Override
+            public void onResponse(Response response) throws IOException {
+                if(response.isSuccessful()){
+                    String msg = response.message();
+                }
+            }
+
         });
 
     }

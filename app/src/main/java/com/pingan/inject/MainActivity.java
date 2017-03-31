@@ -4,8 +4,8 @@ import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.util.Log;
 import android.view.View;
+import android.widget.EditText;
 
 import com.android.dx.stock.ProxyBuilder;
 
@@ -13,14 +13,8 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.Random;
 
-import okhttp3.OkHttpClient;
-import okhttp3.internal.Internal;
-
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertTrue;
+//import com.squareup.okhttp.OkHttpClient;
 
 /**
  * Created by yunyang on 2017/3/22.
@@ -62,8 +56,10 @@ public class MainActivity extends Activity {
         findViewById(R.id.button2).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                OkHttpClient client = new OkHttpClient();
-                NetUtils.testOKHttpExecute();
+                InjectCenter.init(MainActivity.this.getApplicationContext());
+
+                EditText text = (EditText)findViewById(R.id.url_text);
+                NetUtils.testOKHttpV2Execute(text.getText().toString());
             }
         });
 
@@ -84,16 +80,16 @@ public class MainActivity extends Activity {
                 }
             }
         });
+
         findViewById(R.id.button4).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 //OkHttpClient oldClient = new OkHttpClient();
                 //Internal.instance = new ProxyInternal(MainActivity.this.getApplication(), Internal.instance);
-
                 InjectCenter.init(MainActivity.this.getApplicationContext());
 
-                OkHttpClient client = new OkHttpClient();
-                NetUtils.testOKHttpExecute();
+                EditText text = (EditText)findViewById(R.id.url_text);
+                NetUtils.testOKHttpV3Execute(text.getText().toString());
             }
         });
 

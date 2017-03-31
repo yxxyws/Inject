@@ -1,12 +1,7 @@
 package com.pingan.inject;
 
-import android.renderscript.ScriptGroup;
-import android.support.annotation.NonNull;
-
 import java.io.IOException;
 import java.io.InputStream;
-
-import okhttp3.Address;
 
 /**
  * Created by yunyang on 2017/3/27.

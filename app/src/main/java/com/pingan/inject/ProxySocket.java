@@ -4,15 +4,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
-import java.net.Proxy;
 import java.net.Socket;
 import java.net.SocketAddress;
 import java.net.SocketException;
-import java.net.SocketImpl;
-import java.net.UnknownHostException;
 import java.nio.channels.SocketChannel;
-
-import okhttp3.Address;
 
 /**
  * Created by yunyang on 2017/3/25.

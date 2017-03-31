@@ -12,4 +12,9 @@ public class InjectCenter {
     public static void init(Context applicationContext){
         ProxyFactory.initOKhttp(applicationContext);
     }
+
+    public static void recover(Context applicationContext){
+        if(ProxyFactory.initSuccess) {
+        }
+    }
 }

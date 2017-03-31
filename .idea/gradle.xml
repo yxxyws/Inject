@@ -10,6 +10,10 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app" />
+            <option value="$PROJECT_DIR$/okhttp20" />
+            <option value="$PROJECT_DIR$/okhttp26" />
+            <option value="$PROJECT_DIR$/okhttp30" />
+            <option value="$PROJECT_DIR$/okhttp36" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />
