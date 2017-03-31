@@ -5,8 +5,12 @@
       <module fileurl="file://$PROJECT_DIR$/Inject.iml" filepath="$PROJECT_DIR$/Inject.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/okhttp20/okhttp20.iml" filepath="$PROJECT_DIR$/okhttp20/okhttp20.iml" />
+      <module fileurl="file://$PROJECT_DIR$/okhttp20/okhttp20.iml" filepath="$PROJECT_DIR$/okhttp20/okhttp20.iml" />
+      <module fileurl="file://$PROJECT_DIR$/okhttp26/okhttp26.iml" filepath="$PROJECT_DIR$/okhttp26/okhttp26.iml" />
       <module fileurl="file://$PROJECT_DIR$/okhttp26/okhttp26.iml" filepath="$PROJECT_DIR$/okhttp26/okhttp26.iml" />
       <module fileurl="file://$PROJECT_DIR$/okhttp30/okhttp30.iml" filepath="$PROJECT_DIR$/okhttp30/okhttp30.iml" />
+      <module fileurl="file://$PROJECT_DIR$/okhttp30/okhttp30.iml" filepath="$PROJECT_DIR$/okhttp30/okhttp30.iml" />
+      <module fileurl="file://$PROJECT_DIR$/okhttp36/okhttp36.iml" filepath="$PROJECT_DIR$/okhttp36/okhttp36.iml" />
       <module fileurl="file://$PROJECT_DIR$/okhttp36/okhttp36.iml" filepath="$PROJECT_DIR$/okhttp36/okhttp36.iml" />
     </modules>
   </component>

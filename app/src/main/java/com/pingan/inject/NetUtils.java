@@ -2,8 +2,14 @@ package com.pingan.inject;
 
 import com.squareup.okhttp.*;
 
+import java.io.BufferedReader;
 import java.io.IOException;
-
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLEncoder;
 
 
 /**
@@ -62,6 +68,48 @@ public class NetUtils {
 
         });
 
+    }
+
+    public static String postHttpUrlConnectionRequest(String urlString) {
+        HttpURLConnection httpURLConnection = null;
+        String message = "";
+        try {
+            URL url = new URL(urlString);
+
+            httpURLConnection = (HttpURLConnection) url.openConnection();
+            httpURLConnection.setRequestMethod("POST");
+            httpURLConnection.setConnectTimeout(10 * 1000);
+            httpURLConnection.setRequestProperty("Charset", "UTF-8");
+            String body = "p=" + URLEncoder.encode("ptest") + "&p=" + URLEncoder.encode("test2");
+            httpURLConnection.setRequestProperty("Cache-Control", "max-age=0");
+            // 设置文件类型
+            httpURLConnection.setRequestProperty("Content-Type", "text/xml; charset=UTF-8");
+            //设置conn可以写请求的内容
+            httpURLConnection.setDoOutput(true);
+            httpURLConnection.getOutputStream().write(body.getBytes());
+            InputStream inputStream = httpURLConnection.getInputStream();
+
+            if (httpURLConnection.getResponseCode() == 200) {
+                BufferedReader bufferedReader =
+                        new BufferedReader(new InputStreamReader(inputStream));
+                StringBuilder sb = new StringBuilder();
+                String line;
+                while ((line = bufferedReader.readLine()) != null) {
+                    sb.append(line);
+                }
+                message = sb.toString();
+            }
+            return message;
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (httpURLConnection != null) {
+                httpURLConnection.disconnect();
+            }
+            return message;
+        }
     }
 
     public void testHttpClientPost(){
