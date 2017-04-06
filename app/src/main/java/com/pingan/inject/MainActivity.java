@@ -7,12 +7,15 @@ import android.support.annotation.Nullable;
 import android.view.View;
 import android.widget.EditText;
 
+import com.android.dx.command.Main;
 import com.android.dx.stock.ProxyBuilder;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 //import com.squareup.okhttp.OkHttpClient;
 
@@ -50,7 +53,7 @@ public class MainActivity extends Activity {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                a.b();
+                a.c();
             }
         });
         findViewById(R.id.button2).setOnClickListener(new View.OnClickListener() {
@@ -90,6 +93,29 @@ public class MainActivity extends Activity {
 
                 EditText text = (EditText)findViewById(R.id.url_text);
                 NetUtils.testOKHttpV3Execute(text.getText().toString());
+            }
+        });
+
+        findViewById(R.id.button5).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                EditText text = (EditText)findViewById(R.id.url_text);
+                final String url = text.getText().toString();
+                Thread t = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        HttpUrlConnectionProxyFactory.injectUrlFactory(MainActivity.this.getApplicationContext());
+
+                        try {
+                            new URL("http://www.pingan.com");
+                            new URL("https://www.pingan.com");
+                        } catch (MalformedURLException e) {
+                            e.printStackTrace();
+                        }
+                        NetUtils.postHttpUrlConnectionRequest(url);
+                    }
+                });
+                t.start();
             }
         });
 

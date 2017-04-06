@@ -36,22 +36,30 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="inject"
+        android:layout_marginTop="24dp"
         android:layout_below="@+id/button3"
-        android:layout_alignLeft="@+id/button3"
-        android:layout_alignStart="@+id/button3"
-        android:layout_marginTop="33dp" />
+        android:layout_centerHorizontal="true" />
 
     <EditText
         android:id="@+id/url_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentRight="true"
-        android:layout_below="@+id/button4"
-        android:layout_marginEnd="63dp"
-        android:layout_marginRight="63dp"
-        android:layout_marginTop="45dp"
+        android:layout_marginEnd="74dp"
+        android:layout_marginRight="74dp"
         android:ems="10"
         android:inputType="textPersonName"
-        android:text="http://www.baidu.com" />
+        android:text="http://www.baidu.com"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginBottom="40dp" />
+
+    <Button
+        android:id="@+id/button5"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="26dp"
+        android:text="httpurlconnection"
+        android:layout_below="@+id/button4"
+        android:layout_centerHorizontal="true" />
 </RelativeLayout>

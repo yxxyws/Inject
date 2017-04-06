@@ -88,8 +88,9 @@ public class NetUtils {
             httpURLConnection.setDoOutput(true);
             httpURLConnection.getOutputStream().write(body.getBytes());
             InputStream inputStream = httpURLConnection.getInputStream();
+            String llr = httpURLConnection.getRequestProperty("Content-Type");
 
-            if (httpURLConnection.getResponseCode() == 200) {
+            //if (httpURLConnection.getResponseCode() == 200) {
                 BufferedReader bufferedReader =
                         new BufferedReader(new InputStreamReader(inputStream));
                 StringBuilder sb = new StringBuilder();
@@ -98,13 +99,17 @@ public class NetUtils {
                     sb.append(line);
                 }
                 message = sb.toString();
-            }
+            //}
             return message;
         } catch (MalformedURLException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
-        } finally {
+        }catch (Exception e){
+            e.printStackTrace();
+        }catch (Error e){
+            e.printStackTrace();
+        }finally {
             if (httpURLConnection != null) {
                 httpURLConnection.disconnect();
             }

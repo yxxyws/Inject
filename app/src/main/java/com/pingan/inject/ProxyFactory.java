@@ -220,6 +220,7 @@ public class ProxyFactory {
 
         @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+            method.setAccessible(true);
             if (method.getName().equals("createSocket")) {
                 try {
                     Object sslSocket = method.invoke(rawFactory, args);
@@ -260,6 +261,7 @@ public class ProxyFactory {
 
         @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+            method.setAccessible(true);
             if (method.getName() != "close") {
                 try {
                     Object result = method.invoke(rawSocket, args);
@@ -303,6 +305,7 @@ public class ProxyFactory {
         @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
             try {
+                method.setAccessible(true);
                 if (method.getName().equals("lookup")) {
                     host = (String) args[0];
                     return method.invoke(rawDns, args);
@@ -326,6 +329,7 @@ public class ProxyFactory {
 
         @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+            method.setAccessible(true);
             if (method.getName() == "get" && args.length >= 3) {
                 try {
                     boolean doInject = false;
@@ -428,6 +432,7 @@ public class ProxyFactory {
 
         @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+            method.setAccessible(true);
             if (method.getName() == "internalCache" && args.length == 1) {
                 Object okhttpClient = args[0];
                 try {
@@ -505,9 +510,11 @@ public class ProxyFactory {
 
         @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+            method.setAccessible(true);
             if (method.getName() == "get") {
                 Object request = args[0];
                 Method urlStringMethod = request.getClass().getDeclaredMethod("urlString");
+                urlStringMethod.setAccessible(true);
                 Object urlString = urlStringMethod.invoke(request);
                 if (urlString != null) {
                     TimeDevice.getInstance().startRecord(urlString.toString());
@@ -536,6 +543,7 @@ public class ProxyFactory {
                     // 2.20至2.60的版本才有的方法
                     TimeDevice.getInstance().endRecord(null, TimeDevice.NORMAL);
                 }
+                method.setAccessible(true);
                 return method.invoke(rawTransport, args);
             } catch (Exception e){
                 TimeDevice.getInstance().endRecord(null, TimeDevice.INPUT_IO);

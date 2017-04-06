@@ -21,7 +21,8 @@ public class TimeDevice {
     public static final int INPUT_IO = 3;
     public static final int OUPUT_IO = 4;
     public static final int CLOSE = 5;
-    public static final int OTHER = 6;
+    public static final int OTHER = -1;
+    public static final int ERROR_CODE = 6;
 
     private static TimeDevice instance;
 
@@ -88,18 +89,22 @@ public class TimeDevice {
         long time = System.currentTimeMillis();
         Message message = mHandler.obtainMessage();
         Object address = obj;
-        message.obj = new NetRecordStruct(true, address.toString(), threadId, time, 0);
+        message.obj = new NetRecordStruct(true, address.toString(), threadId, time, 0, null);
         mHandler.sendMessage(message);
     }
 
     public void endRecord(Object obj, int endState) {
+        endRecord(obj, endState, null);
+    }
+
+        public void endRecord(Object obj, int endState, Object data) {
         long threadId = Thread.currentThread().getId();
         long time = System.currentTimeMillis();
         Message message = mHandler.obtainMessage();
         if(obj != null) {
-            message.obj = new NetRecordStruct(false, obj.toString(), threadId, time, endState);
+            message.obj = new NetRecordStruct(false, obj.toString(), threadId, time, endState, data);
         }else{
-            message.obj = new NetRecordStruct(false, "", threadId, time, endState);
+            message.obj = new NetRecordStruct(false, "", threadId, time, endState, data);
         }
         mHandler.sendMessage(message);
     }
@@ -110,13 +115,15 @@ public class TimeDevice {
         long timeStamp;
         boolean startOrEnd;
         int endState;
+        Object data;
 
-        public NetRecordStruct(boolean startOrEnd, String url, long threadId, long timestamp, int endState) {
+        public NetRecordStruct(boolean startOrEnd, String url, long threadId, long timestamp, int endState, Object data) {
             this.url = url;
             this.threadId = threadId;
             this.timeStamp = timestamp;
             this.startOrEnd = startOrEnd;
             this.endState = endState;
+            this.data = data;
         }
 
         @Override
