@@ -21,7 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * A primitive type, interface or class.
+ * DemoA primitive type, interface or class.
  *
  * <p><strong>Warning:</strong> Use care when dealing with boxed primitive
  * types. Java's lack of support for parameterized primitive types means that

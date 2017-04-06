@@ -21,7 +21,7 @@ import com.android.dx.rop.code.Rops;
 import com.android.dx.rop.type.TypeList;
 
 /**
- * A comparison between two values of the same type.
+ * DemoA comparison between two values of the same type.
  */
 public enum Comparison {
 

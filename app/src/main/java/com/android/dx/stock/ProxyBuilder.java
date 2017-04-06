@@ -102,7 +102,7 @@ import static java.lang.reflect.Modifier.STATIC;
  * <p>
  * You must provide a dex cache directory via the {@link #dexCache(File)} method. You should take
  * care not to make this a world-writable directory, so that third parties cannot inject code into
- * your application.  A suitable parameter for these output directories would be something like
+ * your application.  DemoA suitable parameter for these output directories would be something like
  * this:
  * <pre>{@code
  *     getApplicationContext().getDir("dx", Context.MODE_PRIVATE);
@@ -126,7 +126,7 @@ public final class ProxyBuilder<T> {
     private static final String FIELD_NAME_METHODS = "$__methodArray";
 
     /**
-     * A cache of all proxy classes ever generated. At the time of writing,
+     * DemoA cache of all proxy classes ever generated. At the time of writing,
      * Android's runtime doesn't support class unloading so there's little
      * value in using weak references.
      */
@@ -712,7 +712,7 @@ public final class ProxyBuilder<T> {
     /**
      * Calculates the correct return statement code for a method.
      * <p>
-     * A void method will not return anything.  A method that returns a primitive will need to
+     * DemoA void method will not return anything.  DemoA method that returns a primitive will need to
      * unbox the boxed result.  Otherwise we will cast the result.
      */
     // This one is tricky to fix, I gave up.

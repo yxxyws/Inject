@@ -44,8 +44,8 @@ public class ProxyFactory {
             e.printStackTrace();
         }
 
-        OKClientClass = null;
-        OKHttpVersion = 0;
+        //OKClientClass = null;
+        //OKHttpVersion = 0;
         if (OKClientClass == null) {
             try {
                 OKClientClass = Class.forName("com.squareup.okhttp.OkHttpClient");

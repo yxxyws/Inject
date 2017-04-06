@@ -19,7 +19,7 @@ package com.android.dx;
 import com.android.dx.rop.code.RegisterSpec;
 
 /**
- * A temporary variable that holds a single value of a known type.
+ * DemoA temporary variable that holds a single value of a known type.
  */
 public final class Local<T> {
     private final Code code;

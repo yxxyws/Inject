@@ -1,7 +1,5 @@
 package com.pingan.inject;
 
-import com.squareup.okhttp.*;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,15 +14,46 @@ import java.net.URLEncoder;
  * Created by yunyang on 2017/3/23.
  */
 
-public class NetUtils {
+public class NetTestUtils {
 
     public static void testOKHttpV3Execute(String url){
-        okhttp3.OkHttpClient client = new okhttp3.OkHttpClient();
-        //Internal.instance = new ProxyInternalV2(Internal.instance);
-        okhttp3.Request request = new okhttp3.Request.Builder().url(url).build();
-        client.newCall(request).enqueue(new okhttp3.Callback() {
+//        okhttp3.OkHttpClient client = new okhttp3.OkHttpClient();
+//        //Internal.instance = new ProxyInternalV2(Internal.instance);
+//        okhttp3.Request request = new okhttp3.Request.Builder().url(url).build();
+//        client.newCall(request).enqueue(new okhttp3.Callback() {
+////            @Override
+////            public void onFailure(okhttp3.Request request, IOException e) {
+////                e.printStackTrace();
+////            }
+////
+////            @Override
+////            public void onResponse(Response response) throws IOException {
+////                if(response.isSuccessful()){
+////                    String msg = response.message();
+////                }
+////            }
 //            @Override
-//            public void onFailure(okhttp3.Request request, IOException e) {
+//            public void onFailure(okhttp3.Call call, IOException e) {
+//                e.printStackTrace();
+//            }
+//
+//            @Override
+//            public void onResponse(okhttp3.Call call, okhttp3.Response response) throws IOException {
+//                if(response.isSuccessful()){
+//                    String msg = response.message();
+//                }
+//            }
+//        });
+//
+    }
+
+    public static void testOKHttpV2Execute(String url){
+//        OkHttpClient client = new OkHttpClient();
+//        //Internal.instance = new ProxyInternalV2(Internal.instance);
+//        Request request = new Request.Builder().url(url).build();
+//        client.newCall(request).enqueue(new Callback() {
+//            @Override
+//            public void onFailure(Request request, IOException e) {
 //                e.printStackTrace();
 //            }
 //
@@ -34,40 +63,9 @@ public class NetUtils {
 //                    String msg = response.message();
 //                }
 //            }
-            @Override
-            public void onFailure(okhttp3.Call call, IOException e) {
-                e.printStackTrace();
-            }
-
-            @Override
-            public void onResponse(okhttp3.Call call, okhttp3.Response response) throws IOException {
-                if(response.isSuccessful()){
-                    String msg = response.message();
-                }
-            }
-        });
-
-    }
-
-    public static void testOKHttpV2Execute(String url){
-        OkHttpClient client = new OkHttpClient();
-        //Internal.instance = new ProxyInternalV2(Internal.instance);
-        Request request = new Request.Builder().url(url).build();
-        client.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(Request request, IOException e) {
-                e.printStackTrace();
-            }
-
-            @Override
-            public void onResponse(Response response) throws IOException {
-                if(response.isSuccessful()){
-                    String msg = response.message();
-                }
-            }
-
-        });
-
+//
+//        });
+//
     }
 
     public static String postHttpUrlConnectionRequest(String urlString) {
@@ -90,7 +88,7 @@ public class NetUtils {
             InputStream inputStream = httpURLConnection.getInputStream();
             String llr = httpURLConnection.getRequestProperty("Content-Type");
 
-            //if (httpURLConnection.getResponseCode() == 200) {
+            if (httpURLConnection.getResponseCode() == 200) {
                 BufferedReader bufferedReader =
                         new BufferedReader(new InputStreamReader(inputStream));
                 StringBuilder sb = new StringBuilder();
@@ -99,7 +97,7 @@ public class NetUtils {
                     sb.append(line);
                 }
                 message = sb.toString();
-            //}
+            }
             return message;
         } catch (MalformedURLException e) {
             e.printStackTrace();

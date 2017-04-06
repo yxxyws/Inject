@@ -25,7 +25,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * A branch target in a list of instructions.
+ * DemoA branch target in a list of instructions.
  */
 public final class Label {
 

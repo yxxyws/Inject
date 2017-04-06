@@ -21,6 +21,5 @@ public class InjectCenter {
 
     public void initHttpUrlConnection(){
         Class urlClass = URL.class;
-
     }
 }

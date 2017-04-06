@@ -124,7 +124,7 @@ import static com.android.dx.rop.type.Type.BT_SHORT;
  * means the label requiring the fewest stack frames to be popped.
  *
  * <h3>Calling methods</h3>
- * A method's caller must know its return type, name, parameters, and invoke
+ * DemoA method's caller must know its return type, name, parameters, and invoke
  * kind. Lookup a method on a type using {@link TypeId#getMethod
  * TypeId.getMethod()}. This is more onerous than Java language invokes, which
  * can infer the target method using the target object and parameters. There are
@@ -172,7 +172,7 @@ import static com.android.dx.rop.type.Type.BT_SHORT;
  * exceptions thrown.
  *
  * <strong>Warning:</strong> Even if a method has the {@code synchronized} flag,
- * dex requires instructions to acquire and release monitors manually. A method
+ * dex requires instructions to acquire and release monitors manually. DemoA method
  * declared with {@link java.lang.reflect.Modifier#SYNCHRONIZED SYNCHRONIZED}
  * but without manual calls to {@code monitorEnter()} and {@code monitorExit()}
  * will not be synchronized when executed.

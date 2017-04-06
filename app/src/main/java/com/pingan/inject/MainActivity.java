@@ -7,7 +7,6 @@ import android.support.annotation.Nullable;
 import android.view.View;
 import android.widget.EditText;
 
-import com.android.dx.command.Main;
 import com.android.dx.stock.ProxyBuilder;
 
 import java.io.IOException;
@@ -24,63 +23,18 @@ import java.net.URL;
  */
 
 public class MainActivity extends Activity {
-    A a = new A();
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
-        findViewById(R.id.button).setOnClickListener(new View.OnClickListener(){
-
-            @Override
-            public void onClick(View v) {
-                //ProxyBuilder<A> builder;
-
-                InvocationHandler handler = new InvocationHandler() {
-                    @Override
-                    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-                        if (method.getName().equals("b")) {
-                            System.out.println("inject");
-                        }
-                        return ProxyBuilder.callSuper(proxy, method, args);
-                    }
-                };
-                A a = null;
-                try {
-                    a = ProxyBuilder.forClass(A.class)
-                            .dexCache(MainActivity.this.getDir("dx", Context.MODE_PRIVATE))
-                            .handler(handler)
-                            .build();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                a.c();
-            }
-        });
         findViewById(R.id.button2).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 InjectCenter.init(MainActivity.this.getApplicationContext());
 
                 EditText text = (EditText)findViewById(R.id.url_text);
-                NetUtils.testOKHttpV2Execute(text.getText().toString());
-            }
-        });
-
-        findViewById(R.id.button3).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Field f = null;
-                try {
-                    f = A.class.getDeclaredField("value");
-                    f.setAccessible(true);
-                    System.out.println("value:" + f.getInt(a));
-                    f.setInt(a, 2);
-                    System.out.println("value:" + f.getInt(a));
-                } catch (NoSuchFieldException e) {
-                    e.printStackTrace();
-                } catch (IllegalAccessException e) {
-                    e.printStackTrace();
-                }
+                NetTestUtils.testOKHttpV2Execute(text.getText().toString());
             }
         });
 
@@ -92,7 +46,7 @@ public class MainActivity extends Activity {
                 InjectCenter.init(MainActivity.this.getApplicationContext());
 
                 EditText text = (EditText)findViewById(R.id.url_text);
-                NetUtils.testOKHttpV3Execute(text.getText().toString());
+                NetTestUtils.testOKHttpV3Execute(text.getText().toString());
             }
         });
 
@@ -112,7 +66,7 @@ public class MainActivity extends Activity {
                         } catch (MalformedURLException e) {
                             e.printStackTrace();
                         }
-                        NetUtils.postHttpUrlConnectionRequest(url);
+                        NetTestUtils.postHttpUrlConnectionRequest(url);
                     }
                 });
                 t.start();
