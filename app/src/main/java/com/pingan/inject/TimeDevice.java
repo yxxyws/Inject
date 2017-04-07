@@ -89,7 +89,7 @@ public class TimeDevice {
         long time = System.currentTimeMillis();
         Message message = mHandler.obtainMessage();
         Object address = obj;
-        message.obj = new NetRecordStruct(true, address.toString(), threadId, time, 0, null);
+        message.obj = new NetRecordStruct(true, getString(address), threadId, time, 0, null);
         mHandler.sendMessage(message);
     }
 
@@ -97,16 +97,19 @@ public class TimeDevice {
         endRecord(obj, endState, null);
     }
 
-        public void endRecord(Object obj, int endState, Object data) {
+    public void endRecord(Object obj, int endState, Object data) {
         long threadId = Thread.currentThread().getId();
         long time = System.currentTimeMillis();
         Message message = mHandler.obtainMessage();
-        if(obj != null) {
-            message.obj = new NetRecordStruct(false, obj.toString(), threadId, time, endState, data);
-        }else{
-            message.obj = new NetRecordStruct(false, "", threadId, time, endState, data);
-        }
+        message.obj = new NetRecordStruct(false, getString(obj), threadId, time, endState, data);
         mHandler.sendMessage(message);
+    }
+
+    public static String getString(Object address){
+        if(address != null){
+            return address.toString();
+        }
+        return "";
     }
 
     private class NetRecordStruct {
