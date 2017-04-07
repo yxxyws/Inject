@@ -7,6 +7,7 @@ import com.android.dx.stock.ProxyBuilder;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -48,6 +49,10 @@ public class HttpUrlConnectionInjectHandler {
                     handlersField = f;
                     handlersField.setAccessible(true);
                     Object handlersObject = handlersField.get(URL.class);
+                    if(handlersObject!=null){
+                        Method clearMethod = Hashtable.class.getMethod("clear");
+                        clearMethod.invoke(handlersObject);
+                    }
                     if (!handlersObject.getClass().getName().contains("Proxy"))
                         handlersField.set(null, getHashTabelProxy(handlersObject));
                 }
@@ -55,6 +60,10 @@ public class HttpUrlConnectionInjectHandler {
         } catch (IOException e) {
             e.printStackTrace();
         } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
             e.printStackTrace();
         }
 
