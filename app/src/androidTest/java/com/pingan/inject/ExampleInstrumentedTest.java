@@ -4,6 +4,7 @@ import android.content.Context;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
 import android.test.InstrumentationTestCase;
+import android.widget.EditText;
 
 import com.android.dx.stock.ProxyBuilder;
 
@@ -42,7 +43,7 @@ public class ExampleInstrumentedTest {
                 if (method.getName().equals("b")) {
                     System.out.println("inject");
                     Method cMethod = DemoA.class.getMethod("c");
-                    ProxyBuilder.callSuper(proxy,cMethod, args);
+                    ProxyBuilder.callSuper(proxy, cMethod, args);
                 }
 
                 return ProxyBuilder.callSuper(proxy, method, args);
@@ -60,7 +61,7 @@ public class ExampleInstrumentedTest {
         a.b();
     }
 
-    @Test
+    //@Test
     public void testModiFinal() throws Exception {
         DemoA a = new DemoA();
         Field f = null;
@@ -78,16 +79,46 @@ public class ExampleInstrumentedTest {
     }
 
     @Test
-    public void testOKHttpV20(){
-        ;
+    public void testOKHttpV20Http() throws Exception {
+        Context appContext = InstrumentationRegistry.getTargetContext();
+        OKHttpInjectHandler.getHandler(20).initOKhttp(appContext);
+
+        String url = "http://www.baidu.com";
+        NetTestUtils.testOKHttpV2Execute(url);
     }
 
     @Test
-    public void testOKHttpV26(){
-        ;
+    public void testOKHttpV20Https() throws Exception {
+        Context appContext = InstrumentationRegistry.getTargetContext();
+        OKHttpInjectHandler.getHandler(20).initOKhttp(appContext);
+
+        String url = "https://www.baidu.com";
+        NetTestUtils.testOKHttpV2Execute(url);
     }
 
-    public void testOKHttp27(){
-        ;
+    @Test
+    public void testOKHttpV30Http() throws Exception {
+        Context appContext = InstrumentationRegistry.getTargetContext();
+        OKHttpInjectHandler.getHandler(30).initOKhttp(appContext);
+
+        String url = "http://www.baidu.com";
+        NetTestUtils.testOKHttpV3Execute(url);
+    }
+
+    @Test
+    public void testOKHttp30Https() throws Exception {
+        Context appContext = InstrumentationRegistry.getTargetContext();
+        OKHttpInjectHandler.getHandler(30).initOKhttp(appContext);
+
+        String url = "https://www.baidu.com";
+        NetTestUtils.testOKHttpV3Execute(url);
+    }
+
+    @Test
+    public void testHttpConnection() throws Exception {
+        Context appContext = InstrumentationRegistry.getTargetContext();
+        HttpUrlConnectionInjectHandler.injectUrlFactory(appContext);
+        String url = "http://www.baidu.com";
+        NetTestUtils.postHttpUrlConnectionRequest(url);
     }
 }

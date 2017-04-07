@@ -1,5 +1,10 @@
 package com.pingan.inject;
 
+import com.squareup.okhttp.Callback;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.Response;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,11 +21,12 @@ import java.net.URLEncoder;
 
 public class NetTestUtils {
 
-    public static void testOKHttpV3Execute(String url){
-//        okhttp3.OkHttpClient client = new okhttp3.OkHttpClient();
-//        //Internal.instance = new ProxyInternalV2(Internal.instance);
-//        okhttp3.Request request = new okhttp3.Request.Builder().url(url).build();
-//        client.newCall(request).enqueue(new okhttp3.Callback() {
+    public static void testOKHttpV3Execute(String url)throws Exception{
+        okhttp3.OkHttpClient client = new okhttp3.OkHttpClient();
+        //Internal.instance = new ProxyInternalV2(Internal.instance);
+        okhttp3.Request request = new okhttp3.Request.Builder().url(url).build();
+        client.newCall(request).execute();
+//                enqueue(new okhttp3.Callback() {
 ////            @Override
 ////            public void onFailure(okhttp3.Request request, IOException e) {
 ////                e.printStackTrace();
@@ -44,31 +50,18 @@ public class NetTestUtils {
 //                }
 //            }
 //        });
-//
+
     }
 
-    public static void testOKHttpV2Execute(String url){
-//        OkHttpClient client = new OkHttpClient();
-//        //Internal.instance = new ProxyInternalV2(Internal.instance);
-//        Request request = new Request.Builder().url(url).build();
-//        client.newCall(request).enqueue(new Callback() {
-//            @Override
-//            public void onFailure(Request request, IOException e) {
-//                e.printStackTrace();
-//            }
-//
-//            @Override
-//            public void onResponse(Response response) throws IOException {
-//                if(response.isSuccessful()){
-//                    String msg = response.message();
-//                }
-//            }
-//
-//        });
-//
+    public static void testOKHttpV2Execute(String url)throws Exception{
+        OkHttpClient client = new OkHttpClient();
+        //Internal.instance = new ProxyInternalV2(Internal.instance);
+        Request request = new Request.Builder().url(url).build();
+        client.newCall(request).execute();
+
     }
 
-    public static String postHttpUrlConnectionRequest(String urlString) {
+    public static String postHttpUrlConnectionRequest(String urlString) throws Exception {
         HttpURLConnection httpURLConnection = null;
         String message = "";
         try {
@@ -99,14 +92,14 @@ public class NetTestUtils {
                 message = sb.toString();
             }
             return message;
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }catch (Exception e){
-            e.printStackTrace();
-        }catch (Error e){
-            e.printStackTrace();
+//        } catch (MalformedURLException e) {
+//            e.printStackTrace();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }catch (Exception e){
+//            e.printStackTrace();
+//        }catch (Error e){
+//            e.printStackTrace();
         }finally {
             if (httpURLConnection != null) {
                 httpURLConnection.disconnect();

@@ -2,7 +2,6 @@ package com.pingan.inject;
 
 import android.content.Context;
 
-import java.lang.reflect.Field;
 import java.net.URL;
 
 /**
@@ -10,13 +9,14 @@ import java.net.URL;
  */
 
 public class InjectCenter {
+
     public static void init(Context applicationContext){
-        ProxyFactory.initOKhttp(applicationContext);
+        OKHttpInjectHandler.getHandler(20).initOKhttp(applicationContext);
+        OKHttpInjectHandler.getHandler(30).initOKhttp(applicationContext);
     }
 
     public static void recover(Context applicationContext){
-        if(ProxyFactory.initSuccess) {
-        }
+        ;
     }
 
     public void initHttpUrlConnection(){

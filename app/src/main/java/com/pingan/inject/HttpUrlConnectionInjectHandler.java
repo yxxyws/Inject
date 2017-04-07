@@ -9,6 +9,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
@@ -20,7 +21,7 @@ import javax.net.ssl.HttpsURLConnection;
  * Created by yunyang on 2017/4/1.
  */
 
-public class HttpUrlConnectionProxyFactory {
+public class HttpUrlConnectionInjectHandler {
     static Context appContext;
     static Field streamHandlerField;
 
@@ -54,6 +55,13 @@ public class HttpUrlConnectionProxyFactory {
         } catch (IOException e) {
             e.printStackTrace();
         } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            new URL("http://www.pingan.com");
+            new URL("https://www.pingan.com");
+        } catch (MalformedURLException e) {
             e.printStackTrace();
         }
     }

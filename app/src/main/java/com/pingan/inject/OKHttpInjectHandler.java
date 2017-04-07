@@ -13,59 +13,81 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.HashMap;
 
 /**
  * Created by yunyang on 2017/3/28.
  */
 
-public class ProxyFactory {
+public class OKHttpInjectHandler {
+    private static HashMap<Integer, OKHttpInjectHandler> injectHandlers = new HashMap<>();
 
-    private static Class SSLFactoryClass;
-    private static Class SSLParametersImplClass;
-    private static Class SSLSocketClass;
-    private static Context appContext;
+    public OKHttpInjectHandler(int version) {
+        this.RealVersion = version;
+    }
 
-    private static Class OKClientClass;
-    private static Class InternalClass;
-    private static Class AddressClass;
-    private static Object rawInternalInstance;
-
-    public static boolean initSuccess = false;
-
-    private static int OKHttpVersion = 0;
-
-    private static boolean initClass() {
-        try {
-            OKClientClass = Class.forName("okhttp3.OkHttpClient");
-            InternalClass = Class.forName("okhttp3.internal.Internal");
-            AddressClass = Class.forName("okhttp3.Address");
-            OKHttpVersion = 3;
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
+    public static OKHttpInjectHandler getHandler(int version) {
+        synchronized (OKHttpInjectHandler.class) {
+            OKHttpInjectHandler handler = injectHandlers.get(version);
+            if (handler == null) {
+                handler = new OKHttpInjectHandler(version);
+                injectHandlers.put(version, handler);
+            }
+            return handler;
         }
+    }
 
-        //OKClientClass = null;
-        //OKHttpVersion = 0;
-        if (OKClientClass == null) {
+    private Class SSLFactoryClass;
+    private Class SSLParametersImplClass;
+    private Class SSLSocketClass;
+    private Context appContext;
+
+    private Class OKClientClass;
+    private Class InternalClass;
+    private Class AddressClass;
+    private Object rawInternalInstance;
+    private static boolean V2DNSInjected = false;
+
+    public boolean initClientSuccess = false;
+
+    private int OKHttpVersion = 0;//可以被认为的版本号，目前2.0~2.6为20， 2.7~3.6为30
+    private int RealVersion = 0;//真实版本号
+
+    private boolean initClass() {
+        if (RealVersion < 30) {
             try {
                 OKClientClass = Class.forName("com.squareup.okhttp.OkHttpClient");
                 InternalClass = Class.forName("com.squareup.okhttp.internal.Internal");
                 Method[] methods = InternalClass.getMethods();
                 for (Method m : methods) {
+                    //特别针对okhttp 2.7的情况，其代码和okhttp3.x类似，但用的是2.x的包名
                     if (m.getName() == "get") {
-                        OKHttpVersion = 3;
+                        OKHttpVersion = 30;
                         break;
                     }
                 }
-                if (OKHttpVersion == 3) {
+                if (OKHttpVersion == 30) {
                     AddressClass = Class.forName("com.squareup.okhttp.Address");
                 } else {
                     //2.6及以下版本用不到AddressClass
-                    OKHttpVersion = 2;
+                    OKHttpVersion = 20;
                 }
             } catch (ClassNotFoundException e) {
-                e.printStackTrace();
+                //e.printStackTrace();
             }
+        } else {
+            try {
+                OKClientClass = Class.forName("okhttp3.OkHttpClient");
+                InternalClass = Class.forName("okhttp3.internal.Internal");
+                AddressClass = Class.forName("okhttp3.Address");
+                OKHttpVersion = 30;
+            } catch (ClassNotFoundException e) {
+                //e.printStackTrace();
+            }
+        }
+
+        if (OKClientClass == null) {
+            return false;
         }
 
         if (OKClientClass != null) {
@@ -91,7 +113,7 @@ public class ProxyFactory {
                         SSLParametersImplClass = Class.forName("org.apache.harmony.xnet.provider.jsse.SSLParametersImpl");
                         SSLSocketClass = Class.forName("org.apache.harmony.xnet.provider.jsse.OpenSSLSocketImpl");
                     } catch (ClassNotFoundException e) {
-                        e.printStackTrace();
+                        //e.printStackTrace();
                     }
                 }
             }
@@ -102,8 +124,8 @@ public class ProxyFactory {
         return false;
     }
 
-    public static boolean initOKhttp(Context context) {
-        if (!initSuccess && initClass()) {
+    public boolean initOKhttp(Context context) {
+        if (!initClientSuccess && initClass()) {
             try {
                 Constructor constructor = OKClientClass.getConstructor();
                 Object okhttpInstance = constructor.newInstance();
@@ -112,15 +134,15 @@ public class ProxyFactory {
                 Object internalInstance = field.get(InternalClass);
                 if (internalInstance != null && !internalInstance.getClass().getName().contains("Proxy")) {
                     rawInternalInstance = internalInstance;
-                    if (OKHttpVersion == 3) {
+                    if (OKHttpVersion == 30) {
                         field.set(null, getProxyInternalV3(context, internalInstance));
-                    } else if (OKHttpVersion == 2) {
+                    } else if (OKHttpVersion == 20) {
                         field.set(null, getProxyInternalV2(context, internalInstance));
                     } else {
                         return false;
                     }
                     TimeDevice.getInstance();
-                    initSuccess = true;
+                    initClientSuccess = true;
                     return true;
                 }
             } catch (NoSuchMethodException e) {
@@ -138,8 +160,8 @@ public class ProxyFactory {
         return false;
     }
 
-    public static boolean recoverOkHttp() {
-        if (initSuccess) {
+    public boolean recoverOkHttp() {
+        if (initClientSuccess) {
             try {
                 Field field = InternalClass.getDeclaredField("instance");
                 field.setAccessible(true);
@@ -152,12 +174,12 @@ public class ProxyFactory {
             } catch (NoSuchFieldException e) {
                 e.printStackTrace();
             }
-            initSuccess = false;
+            initClientSuccess = false;
         }
         return true;
     }
 
-    public static Object getProxyInternalV3(Context context, Object target) {
+    public Object getProxyInternalV3(Context context, Object target) {
         try {
             InternalInvocationV3 handler = new InternalInvocationV3(context, target);
             if (appContext == null) {
@@ -174,7 +196,7 @@ public class ProxyFactory {
         return target;
     }
 
-    public static Object getSSLSocketFactoryProxy(Context context, Object target, Object address) {
+    public Object getSSLSocketFactoryProxy(Context context, Object target, Object address) {
         SSLSocketFactoryInvocation handler = new SSLSocketFactoryInvocation(target, address);
         try {
             Object result = ProxyBuilder.forClass(SSLFactoryClass)
@@ -198,7 +220,7 @@ public class ProxyFactory {
     }
 
     //为制定的target生成动态代理对象
-    public static Object getDnsProxy(Context context, Object target) throws IllegalArgumentException {
+    public Object getDnsProxy(Context context, Object target) throws IllegalArgumentException {
         if (target != null) {
             //不能用dexmaker因为dnsclass不是class，是interface
             DnsInvocation handler = new DnsInvocation(target);
@@ -209,7 +231,7 @@ public class ProxyFactory {
         return null;
     }
 
-    private static class SSLSocketFactoryInvocation implements InvocationHandler {
+    private class SSLSocketFactoryInvocation implements InvocationHandler {
         Object rawFactory;
         Object address;
 
@@ -250,7 +272,7 @@ public class ProxyFactory {
         }
     }
 
-    private static class SSLSocketInvocation implements InvocationHandler {
+    private class SSLSocketInvocation implements InvocationHandler {
         Object rawSocket;
         Object address;
 
@@ -294,7 +316,7 @@ public class ProxyFactory {
         }
     }
 
-    private static class DnsInvocation implements InvocationHandler {
+    private class DnsInvocation implements InvocationHandler {
         Object rawDns;
         String host;
 
@@ -306,7 +328,9 @@ public class ProxyFactory {
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
             try {
                 method.setAccessible(true);
-                if (method.getName().equals("lookup")) {
+                //同个类方法名变来变去
+                if (method.getName().equals("lookup")||method.getName().equals("getAllByName")
+                        ||method.getName().equals("resolveInetAddresses")) {
                     host = (String) args[0];
                     return method.invoke(rawDns, args);
                 }
@@ -318,7 +342,7 @@ public class ProxyFactory {
         }
     }
 
-    private static class InternalInvocationV3 implements InvocationHandler {
+    private class InternalInvocationV3 implements InvocationHandler {
         Context staticContext;
         Object rawInternal;
 
@@ -354,7 +378,7 @@ public class ProxyFactory {
                         Field sslSocketFactoryField = AddressClass.getDeclaredField("sslSocketFactory");
                         sslSocketFactoryField.setAccessible(true);
                         if (sslSocketFactoryObject != null) {
-                            Object factory = ProxyFactory.getSSLSocketFactoryProxy(staticContext, sslSocketFactoryObject, address);
+                            Object factory = getSSLSocketFactoryProxy(staticContext, sslSocketFactoryObject, address);
                             sslSocketFactoryField.set(address, factory);
                         }
                         TimeDevice.getInstance().startRecord(address);
@@ -384,7 +408,7 @@ public class ProxyFactory {
         }
     }
 
-    static Object readFieldOrNull(Object instance, String fieldName) {
+    Object readFieldOrNull(Object instance, String fieldName) {
         Field field = null;
         try {
             field = instance.getClass().getDeclaredField(fieldName);
@@ -400,7 +424,7 @@ public class ProxyFactory {
         return null;
     }
 
-    public static Object getProxyInternalV2(Context context, Object target) {
+    public Object getProxyInternalV2(Context context, Object target) {
         try {
             InternalInvocationV2 handler = new InternalInvocationV2(context, target);
             if (appContext == null) {
@@ -419,11 +443,10 @@ public class ProxyFactory {
         return target;
     }
 
-    private static class InternalInvocationV2 implements InvocationHandler {
+    private class InternalInvocationV2 implements InvocationHandler {
         Context context;
         Object rawInternal;
         private String urlString;
-        private static boolean DNSInjected = false;
 
         InternalInvocationV2(Context context, Object rawInternal) {
             this.context = context;
@@ -436,15 +459,38 @@ public class ProxyFactory {
             if (method.getName() == "internalCache" && args.length == 1) {
                 Object okhttpClient = args[0];
                 try {
-                    if (!DNSInjected) {
+                    if (!V2DNSInjected) {
                         //2.x的实现不一样，我们只好去改DNS.DEFAULT
-                        Class DNSClass = Class.forName("com.squareup.okhttp.internal.Dns");
+                        Class DNSClass = null;
+                        //2.0
+                        try {
+                            DNSClass = Class.forName("com.squareup.okhttp.internal.Dns");
+                        } catch (ClassNotFoundException e) {
+                            e.printStackTrace();
+                        }
+
+                        // 2.6
+                        if(DNSClass == null){
+                            try {
+                                DNSClass = Class.forName("com.squareup.okhttp.Dns");
+                            } catch (ClassNotFoundException e) {
+                                e.printStackTrace();
+                            }
+                        }
+
+                        if(DNSClass == null){
+                            try {
+                                DNSClass = Class.forName("com.squareup.okhttp.internal.Network");
+                            } catch (ClassNotFoundException e) {
+                                e.printStackTrace();
+                            }
+                        }
                         Field defaultFieldDNS = DNSClass.getField("DEFAULT");
                         if (!defaultFieldDNS.getClass().isAnonymousClass()) {
                             defaultFieldDNS.setAccessible(true);
                             defaultFieldDNS.set(null, getDnsProxy(context, defaultFieldDNS.get(DNSClass)));
                         }
-                        DNSInjected = true;
+                        V2DNSInjected = true;
                     }
                     Field socketFactoryField = null;
                     socketFactoryField = okhttpClient.getClass().getDeclaredField("socketFactory");
@@ -459,7 +505,7 @@ public class ProxyFactory {
                             Field sslSocketFactoryField = okhttpClient.getClass().getDeclaredField("sslSocketFactory");
                             sslSocketFactoryField.setAccessible(true);
                             if (sslSocketFactoryObject != null) {
-                                Object factory = ProxyFactory.getSSLSocketFactoryProxy(context, sslSocketFactoryObject, null);
+                                Object factory = getSSLSocketFactoryProxy(context, sslSocketFactoryObject, null);
                                 sslSocketFactoryField.set(okhttpClient, factory);
                             }
                         }
@@ -470,8 +516,6 @@ public class ProxyFactory {
                         internalCacheField.set(okhttpClient, getInternalCacheProxy(context, internalCacheObject));
                     }
 
-                } catch (ClassNotFoundException e) {
-                    e.printStackTrace();
                 } catch (NoSuchFieldException e) {
                     e.printStackTrace();
                 } catch (IllegalAccessException e) {
@@ -488,7 +532,7 @@ public class ProxyFactory {
         }
     }
 
-    public static Object getInternalCacheProxy(Context context, Object target) {
+    public Object getInternalCacheProxy(Context context, Object target) {
         try {
             InternalCacheInvocation handler = new InternalCacheInvocation(target);
             Class targetClass = Class.forName("com.squareup.okhttp.internal.InternalCache");
@@ -501,7 +545,7 @@ public class ProxyFactory {
         return null;
     }
 
-    private static class InternalCacheInvocation implements InvocationHandler {
+    private class InternalCacheInvocation implements InvocationHandler {
         Object rawInternalCache;
 
         InternalCacheInvocation(Object rawInternalCache) {
@@ -527,7 +571,7 @@ public class ProxyFactory {
         }
     }
 
-    private static class TransportInvocationHandler implements InvocationHandler {
+    private class TransportInvocationHandler implements InvocationHandler {
         Object rawTransport;
 
         TransportInvocationHandler(Object rawTransport) {
@@ -539,13 +583,13 @@ public class ProxyFactory {
             try {
                 if (method.getName() == "getTransferStream") {
                     TimeDevice.getInstance().endRecord(null, TimeDevice.NORMAL);
-                }else if(method.getName() == "openResponseBody"){
+                } else if (method.getName() == "openResponseBody") {
                     // 2.20至2.60的版本才有的方法
                     TimeDevice.getInstance().endRecord(null, TimeDevice.NORMAL);
                 }
                 method.setAccessible(true);
                 return method.invoke(rawTransport, args);
-            } catch (Exception e){
+            } catch (Exception e) {
                 TimeDevice.getInstance().endRecord(null, TimeDevice.INPUT_IO);
                 throw e;
             }
