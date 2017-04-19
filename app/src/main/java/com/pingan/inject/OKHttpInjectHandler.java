@@ -141,7 +141,7 @@ public class OKHttpInjectHandler {
                     } else {
                         return false;
                     }
-                    TimeDevice.getInstance();
+                    FunctionRecorder.getInstance();
                     initClientSuccess = true;
                     return true;
                 }
@@ -216,7 +216,7 @@ public class OKHttpInjectHandler {
             e.printStackTrace();
         }
 
-        return null;
+        return target;
     }
 
     //为制定的target生成动态代理对象
@@ -228,7 +228,7 @@ public class OKHttpInjectHandler {
                     target.getClass().getInterfaces(), handler);
         }
 
-        return null;
+        return target;
     }
 
     private class SSLSocketFactoryInvocation implements InvocationHandler {
@@ -264,9 +264,15 @@ public class OKHttpInjectHandler {
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
-                    TimeDevice.getInstance().endRecord(address, TimeDevice.OTHER);
+                    Throwable cause = e.getCause();
+                    if (cause != null) {
+                        FunctionRecorder.getInstance().recordFail(FunctionRecorder.OTHER, "SSLSocketFactoryInvocation_"
+                                + method.getName() + ":", cause.getMessage());
+                    } else
+                        FunctionRecorder.getInstance().recordFail(FunctionRecorder.OTHER, "SSLSocketFactoryInvocation_"
+                                + method.getName() + ":", e.getMessage());
+                    throw e;
                 }
-
             }
             return method.invoke(rawFactory, args);
         }
@@ -289,27 +295,43 @@ public class OKHttpInjectHandler {
                     Object result = method.invoke(rawSocket, args);
                     if (method.getName() == "getInputStream") {
                         if (!(result instanceof ProxyInputStream)) {
-                            ProxyInputStream stream = new ProxyInputStream(result, address);
+                            ProxyInputStream stream = new ProxyInputStream(result);
+                            stream.setRealThreadId(Thread.currentThread().getId());
                             return stream;
                         }
                     } else if (method.getName() == "getOutputStream") {
                         if (!(result instanceof ProxyOutputStream)) {
-                            ProxyOutputStream stream = new ProxyOutputStream(result, address);
+                            ProxyOutputStream stream = new ProxyOutputStream(result);
                             return stream;
                         }
                     }
                     return result;
                 } catch (Exception e) {
-                    TimeDevice.getInstance().endRecord(address, TimeDevice.CONNECTION);
+                    Throwable cause = e.getCause();
+                    if (cause != null) {
+                        FunctionRecorder.getInstance().recordFail(FunctionRecorder.CONNECTION,
+                                "SSLSocketInvocation_" + method.getName() + ":", cause.getMessage());
+                    } else {
+                        FunctionRecorder.getInstance().recordFail(FunctionRecorder.CONNECTION,
+                                "SSLSocketInvocation_" + method.getName() + ":", e.getMessage());
+                    }
+                    e.printStackTrace();
                     throw new IOException(e);
                 }
             } else {
                 try {
-                    TimeDevice.getInstance().endRecord(address, TimeDevice.CONNECTION);
                     Object b = method.invoke(rawSocket, args);
+                    FunctionRecorder.getInstance().record(FunctionRecorder.CLOSE, "SSLSocketInvocation_" + method.getName());
                     return b;
                 } catch (Exception e) {
-                    TimeDevice.getInstance().endRecord(address, TimeDevice.CLOSE);
+                    Throwable cause = e.getCause();
+                    if (cause != null) {
+                        FunctionRecorder.getInstance().recordFail(FunctionRecorder.CLOSE,
+                                "SSLSocketInvocation_" + method.getName() + ":", cause.getMessage());
+                    } else
+                        FunctionRecorder.getInstance().recordFail(FunctionRecorder.CLOSE,
+                                "SSLSocketInvocation_" + method.getName() + ":", e.getMessage());
+                    e.printStackTrace();
                     throw new IOException(e);
                 }
             }
@@ -329,13 +351,20 @@ public class OKHttpInjectHandler {
             try {
                 method.setAccessible(true);
                 //同个类方法名变来变去
-                if (method.getName().equals("lookup")||method.getName().equals("getAllByName")
-                        ||method.getName().equals("resolveInetAddresses")) {
+                if (method.getName().equals("lookup") || method.getName().equals("getAllByName")
+                        || method.getName().equals("resolveInetAddresses")) {
                     host = (String) args[0];
                     return method.invoke(rawDns, args);
                 }
             } catch (Exception e) {
-                TimeDevice.getInstance().endRecord(host, TimeDevice.DNS);
+                Throwable cause = e.getCause();
+                if (cause != null) {
+                    FunctionRecorder.getInstance().recordFail(FunctionRecorder.DNS,
+                            "DnsInvocation_" + method.getName() + ":", cause.getMessage());
+                } else
+                    FunctionRecorder.getInstance().recordFail(FunctionRecorder.DNS, "DnsInvocation_" +
+                            method.getName() + ":", e.getMessage());
+                e.printStackTrace();
                 throw new UnknownHostException(e.getCause().getMessage());
             }
             return method.invoke(rawDns, args);
@@ -356,53 +385,47 @@ public class OKHttpInjectHandler {
             method.setAccessible(true);
             if (method.getName() == "get" && args.length >= 3) {
                 try {
-                    boolean doInject = false;
                     Object address = args[1];
+                    Field socketFactoryField = null;
+                    socketFactoryField = AddressClass.getDeclaredField("socketFactory");
+                    socketFactoryField.setAccessible(true);
+                    Object socketFactoryObect = socketFactoryField.get(address);
+                    if (socketFactoryObect != null && !(socketFactoryObect instanceof ProxySocketFactory)) {
+                        ProxySocketFactory socketFactory = new ProxySocketFactory(socketFactoryObect, staticContext);
+                        socketFactoryField.set(address, socketFactory);
+                        FunctionRecorder.getInstance().startRecord(address);
+                    } else {
+                        return method.invoke(rawInternal, args);
+                    }
+
                     Object sslSocketFactoryObject = readFieldOrNull(address, "sslSocketFactory");
-                    if (sslSocketFactoryObject == null) {
-                        Field socketFactoryField = null;
-                        socketFactoryField = AddressClass.getDeclaredField("socketFactory");
-                        socketFactoryField.setAccessible(true);
-                        Object socketFactoryObect = socketFactoryField.get(address);
-                        if (socketFactoryObect != null && !(socketFactoryObect instanceof ProxySocketFactory)) {
-                            ProxySocketFactory socketFactory = new ProxySocketFactory(socketFactoryObect, address);
-                            socketFactoryField.set(address, socketFactory);
-                            TimeDevice.getInstance().startRecord(address);
-                            doInject = true;
-                        } else {
+                    if (sslSocketFactoryObject != null) {
+                        if (!sslSocketFactoryObject.getClass().getName().contains("Proxy")) {
+                            Field sslSocketFactoryField = AddressClass.getDeclaredField("sslSocketFactory");
+                            sslSocketFactoryField.setAccessible(true);
+                            if (sslSocketFactoryObject != null) {
+                                Object factory = getSSLSocketFactoryProxy(staticContext, sslSocketFactoryObject, address);
+                                sslSocketFactoryField.set(address, factory);
+                            }
+                        } else
                             return method.invoke(rawInternal, args);
-                        }
                     }
-
-                    if (sslSocketFactoryObject != null && !sslSocketFactoryObject.getClass().getName().contains("Proxy")) {
-                        Field sslSocketFactoryField = AddressClass.getDeclaredField("sslSocketFactory");
-                        sslSocketFactoryField.setAccessible(true);
-                        if (sslSocketFactoryObject != null) {
-                            Object factory = getSSLSocketFactoryProxy(staticContext, sslSocketFactoryObject, address);
-                            sslSocketFactoryField.set(address, factory);
-                        }
-                        TimeDevice.getInstance().startRecord(address);
-                        doInject = true;
-                    }
-
-                    if (doInject) {
-                        Field DNSField = null;
-                        DNSField = AddressClass.getDeclaredField("dns");
-                        DNSField.setAccessible(true);
-                        Object dnsObject = DNSField.get(address);
-                        if (dnsObject != null) {
-                            Object newDnsObject = getDnsProxy(staticContext, dnsObject);
-                            DNSField.set(address, newDnsObject);
-                        }
+                    Field DNSField = null;
+                    DNSField = AddressClass.getDeclaredField("dns");
+                    DNSField.setAccessible(true);
+                    Object dnsObject = DNSField.get(address);
+                    if (dnsObject != null) {
+                        Object newDnsObject = getDnsProxy(staticContext, dnsObject);
+                        DNSField.set(address, newDnsObject);
                     }
                 } catch (NoSuchFieldException e) {
                     e.printStackTrace();
                 } catch (IllegalAccessException e) {
                     e.printStackTrace();
-                } catch (RuntimeException e) {
-                    e.printStackTrace();
                 }
                 return method.invoke(rawInternal, args);
+            }else if(method.getName() == "put"){
+                Object obj = args[1];
             }
             return method.invoke(rawInternal, args);
         }
@@ -466,23 +489,23 @@ public class OKHttpInjectHandler {
                         try {
                             DNSClass = Class.forName("com.squareup.okhttp.internal.Dns");
                         } catch (ClassNotFoundException e) {
-                            e.printStackTrace();
+                            //e.printStackTrace();
                         }
 
                         // 2.6
-                        if(DNSClass == null){
+                        if (DNSClass == null) {
                             try {
                                 DNSClass = Class.forName("com.squareup.okhttp.Dns");
                             } catch (ClassNotFoundException e) {
-                                e.printStackTrace();
+                                //e.printStackTrace();
                             }
                         }
 
-                        if(DNSClass == null){
+                        if (DNSClass == null) {
                             try {
                                 DNSClass = Class.forName("com.squareup.okhttp.internal.Network");
                             } catch (ClassNotFoundException e) {
-                                e.printStackTrace();
+                                //e.printStackTrace();
                             }
                         }
                         Field defaultFieldDNS = DNSClass.getField("DEFAULT");
@@ -497,7 +520,7 @@ public class OKHttpInjectHandler {
                     socketFactoryField.setAccessible(true);
                     Object socketFactoryObect = socketFactoryField.get(okhttpClient);
                     if (socketFactoryObect != null && !(socketFactoryObect instanceof ProxySocketFactory)) {
-                        ProxySocketFactory socketFactory = new ProxySocketFactory(socketFactoryObect, null);
+                        ProxySocketFactory socketFactory = new ProxySocketFactory(socketFactoryObect, appContext);
                         socketFactoryField.set(okhttpClient, socketFactory);
 
                         Object sslSocketFactoryObject = readFieldOrNull(okhttpClient, "sslSocketFactory");
@@ -542,7 +565,7 @@ public class OKHttpInjectHandler {
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
-        return null;
+        return target;
     }
 
     private class InternalCacheInvocation implements InvocationHandler {
@@ -554,20 +577,26 @@ public class OKHttpInjectHandler {
 
         @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-            method.setAccessible(true);
-            if (method.getName() == "get") {
-                Object request = args[0];
-                Method urlStringMethod = request.getClass().getDeclaredMethod("urlString");
-                urlStringMethod.setAccessible(true);
-                Object urlString = urlStringMethod.invoke(request);
-                if (urlString != null) {
-                    TimeDevice.getInstance().startRecord(urlString.toString());
+            try {
+                method.setAccessible(true);
+                if (method.getName() == "get") {
+                    Object request = args[0];
+                    //// TODO: 17/4/11 检查okhttp兼容版本
+                    Method urlStringMethod = request.getClass().getDeclaredMethod("urlString");
+                    urlStringMethod.setAccessible(true);
+                    Object urlString = urlStringMethod.invoke(request);
+                    if (urlString != null) {
+                        FunctionRecorder.getInstance().startRecord(urlString.toString());
+                    }
                 }
+                if (rawInternalCache != null) {
+                    return method.invoke(rawInternalCache, args);
+                } else
+                    return null;
+            } catch (Exception e) {
+                e.printStackTrace();
+                throw e;
             }
-            if (rawInternalCache != null) {
-                return method.invoke(rawInternalCache, args);
-            } else
-                return null;
         }
     }
 
@@ -581,16 +610,25 @@ public class OKHttpInjectHandler {
         @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
             try {
+                method.setAccessible(true);
+                Object result = method.invoke(rawTransport, args);
+
                 if (method.getName() == "getTransferStream") {
-                    TimeDevice.getInstance().endRecord(null, TimeDevice.NORMAL);
+                    FunctionRecorder.getInstance().record(FunctionRecorder.INPUT_IO, "TransportInvocationHandler_" + method.getName());
                 } else if (method.getName() == "openResponseBody") {
                     // 2.20至2.60的版本才有的方法
-                    TimeDevice.getInstance().endRecord(null, TimeDevice.NORMAL);
+                    FunctionRecorder.getInstance().record(FunctionRecorder.INPUT_IO, "TransportInvocationHandler_" + method.getName());
                 }
-                method.setAccessible(true);
-                return method.invoke(rawTransport, args);
+                return result;
             } catch (Exception e) {
-                TimeDevice.getInstance().endRecord(null, TimeDevice.INPUT_IO);
+                e.printStackTrace();
+                Throwable cause = e.getCause();
+                if (cause != null) {
+                    FunctionRecorder.getInstance().recordFail(FunctionRecorder.INPUT_IO,
+                            "TransportInvocationHandler_" + method.getName() + ":", cause.getMessage());
+                } else
+                    FunctionRecorder.getInstance().recordFail(FunctionRecorder.INPUT_IO,
+                            "TransportInvocationHandler_" + method.getName() + ":", e.getMessage());
                 throw e;
             }
         }

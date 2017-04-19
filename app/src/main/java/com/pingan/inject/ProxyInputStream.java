@@ -2,6 +2,7 @@ package com.pingan.inject;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 
 /**
  * Created by yunyang on 2017/3/27.
@@ -9,21 +10,38 @@ import java.io.InputStream;
 
 public class ProxyInputStream extends InputStream {
     InputStream rawInputStream;
-    Object address;
 
-    public ProxyInputStream(Object stream, Object address) {
-        rawInputStream = (InputStream)stream;
-        this.address = address;
+    public void setRealThreadId(long realThreadId) {
+        this.realThreadId = realThreadId;
+    }
+
+    //因为http2.0时，读返回包是线程异步的，所以需要额外同步的那个线程.
+    long realThreadId;
+
+    /**
+     * 设置是否是HttpUrlConnection，如果为是，则不做statusLine分析，因为statusLine已经被剥离了。
+     *
+     * @param httpUrlConnection
+     */
+    public void setHttpConnection(boolean httpUrlConnection) {
+        isHttpUrlConnection = httpUrlConnection;
+    }
+
+    boolean isHttpUrlConnection;
+    Http2HeaderParser http2HeaderParser;
+
+    public ProxyInputStream(Object stream) {
+        rawInputStream = (InputStream) stream;
     }
 
     @Override
     public int read() throws IOException {
         try {
             int ret = rawInputStream.read();
-            TimeDevice.getInstance().endRecord(address, TimeDevice.NORMAL);
             return ret;
         } catch (IOException e) {
-            TimeDevice.getInstance().endRecord(address, TimeDevice.INPUT_IO);
+            FunctionRecorder.getInstance().recordFail(FunctionRecorder.INPUT_IO, "ProxyInputStream_" + "read" + ":"
+                    , e.getMessage(), realThreadId);
             throw e;
         }
     }
@@ -32,10 +50,18 @@ public class ProxyInputStream extends InputStream {
     public int read(byte[] b) throws IOException {
         try {
             int ret = rawInputStream.read(b);
-            TimeDevice.getInstance().endRecord(address, TimeDevice.NORMAL);
+//            if (!hasGotStatus && b.length > 20) {
+//                String responseString = new String(b);
+//                StatusLine statusLine = StatusLine.parse(responseString);
+//                if (statusLine != null) {
+//                    FunctionRecorder.getInstance().recordSuccess(FunctionRecorder.INPUT_IO, Integer.toString(statusLine.code));
+//                    hasGotStatus = true;
+//                }
+//            }
             return ret;
         } catch (IOException e) {
-            TimeDevice.getInstance().endRecord(address, TimeDevice.INPUT_IO);
+            FunctionRecorder.getInstance().recordFail(FunctionRecorder.INPUT_IO, "ProxyInputStream_" + "read" + ":"
+                    , e.getMessage(), realThreadId);
             throw e;
         }
     }
@@ -44,10 +70,39 @@ public class ProxyInputStream extends InputStream {
     public int read(byte[] b, int off, int len) throws IOException {
         try {
             int ret = rawInputStream.read(b, off, len);
-            TimeDevice.getInstance().endRecord(address, TimeDevice.NORMAL);
+            boolean hasGotStatus = FunctionRecorder.getInstance().hasGotStatusLine(realThreadId);
+            boolean isHttp2 = false;
+            if (realThreadId != 0 && realThreadId != Thread.currentThread().getId())
+                isHttp2 = true;//TODO 粗略判断http2.0，可能有问题
+            if (!hasGotStatus) {
+                if (!isHttpUrlConnection && !isHttp2 && ret > 20) {
+                    String responseString = new String(b, off, ret);
+                    StatusLine statusLine = StatusLine.parse(responseString);
+                    if (statusLine != null) {
+                        FunctionRecorder.getInstance().recordSuccess(FunctionRecorder.GET_RETURN_CODE,
+                                Integer.toString(statusLine.code), realThreadId);
+                    } else {
+                    }
+                } else if (isHttp2 && ret >= 9) {
+                    //http2 frame大于9个字节
+                    if (http2HeaderParser == null)
+                        http2HeaderParser = new Http2HeaderParser();
+                    List<Header> headerList = http2HeaderParser.parse(b, off, ret);
+                    if (headerList.size() > 0) {
+                        for (Header head : headerList) {
+                            if (head.name.equals(Header.RESPONSE_STATUS)) {
+                                FunctionRecorder.getInstance().recordSuccess(FunctionRecorder.GET_RETURN_CODE,
+                                        head.value.utf8(), realThreadId);
+                            }
+                        }
+                    }
+                }
+            }
             return ret;
         } catch (IOException e) {
-            TimeDevice.getInstance().endRecord(address, TimeDevice.INPUT_IO);
+            FunctionRecorder.getInstance().recordFail(FunctionRecorder.INPUT_IO,
+                    "ProxyInputStream_" + "read" + ":", e.getMessage(), realThreadId);
+            e.printStackTrace();
             throw e;
         }
     }
@@ -57,7 +112,8 @@ public class ProxyInputStream extends InputStream {
         try {
             return rawInputStream.skip(n);
         } catch (IOException e) {
-            TimeDevice.getInstance().endRecord(address, TimeDevice.INPUT_IO);
+            FunctionRecorder.getInstance().recordFail(FunctionRecorder.INPUT_IO,
+                    "ProxyInputStream_" + "skip" + ":", e.getMessage());
             throw e;
         }
     }
@@ -67,7 +123,8 @@ public class ProxyInputStream extends InputStream {
         try {
             return rawInputStream.available();
         } catch (IOException e) {
-            TimeDevice.getInstance().endRecord(address, TimeDevice.INPUT_IO);
+            FunctionRecorder.getInstance().recordFail(FunctionRecorder.INPUT_IO,
+                    "ProxyInputStream_" + "available" + ":", e.getMessage());
             throw e;
         }
     }
@@ -77,7 +134,8 @@ public class ProxyInputStream extends InputStream {
         try {
             rawInputStream.close();
         } catch (IOException e) {
-            TimeDevice.getInstance().endRecord(address, TimeDevice.INPUT_IO);
+            FunctionRecorder.getInstance().recordFail(FunctionRecorder.INPUT_IO,
+                    "ProxyInputStream_" + "close" + ":", e.getMessage());
             throw e;
         }
     }
@@ -87,7 +145,8 @@ public class ProxyInputStream extends InputStream {
         try {
             rawInputStream.mark(readlimit);
         } catch (Exception e) {
-            TimeDevice.getInstance().endRecord(address, TimeDevice.INPUT_IO);
+            FunctionRecorder.getInstance().recordFail(FunctionRecorder.INPUT_IO,
+                    "ProxyInputStream_" + "mark" + ":", e.getMessage());
             throw e;
         }
     }
@@ -97,7 +156,8 @@ public class ProxyInputStream extends InputStream {
         try {
             rawInputStream.reset();
         } catch (IOException e) {
-            TimeDevice.getInstance().endRecord(address, TimeDevice.INPUT_IO);
+            FunctionRecorder.getInstance().recordFail(FunctionRecorder.INPUT_IO,
+                    "ProxyInputStream_" + "reset" + ":", e.getMessage());
             throw e;
         }
     }
@@ -107,7 +167,8 @@ public class ProxyInputStream extends InputStream {
         try {
             return rawInputStream.markSupported();
         } catch (Exception e) {
-            TimeDevice.getInstance().endRecord(address, TimeDevice.INPUT_IO);
+            FunctionRecorder.getInstance().recordFail(FunctionRecorder.INPUT_IO,
+                    "ProxyInputStream_" + "markSupported" + ":", e.getMessage());
             throw e;
         }
     }

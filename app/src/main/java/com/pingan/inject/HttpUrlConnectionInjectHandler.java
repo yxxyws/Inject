@@ -27,7 +27,7 @@ public class HttpUrlConnectionInjectHandler {
     static Field streamHandlerField;
 
     public static void injectUrlFactory(Context context) {
-        TimeDevice.getInstance();
+        FunctionRecorder.getInstance();
         if (streamHandlerField == null) {
             try {
                 streamHandlerField = URL.class.getDeclaredField("streamHandler");
@@ -49,7 +49,7 @@ public class HttpUrlConnectionInjectHandler {
                     handlersField = f;
                     handlersField.setAccessible(true);
                     Object handlersObject = handlersField.get(URL.class);
-                    if(handlersObject!=null){
+                    if (handlersObject != null) {
                         Method clearMethod = Hashtable.class.getMethod("clear");
                         clearMethod.invoke(handlersObject);
                     }
@@ -93,21 +93,26 @@ public class HttpUrlConnectionInjectHandler {
 
         @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-            if (method.getName() == "put" && args.length == 2 && ("https".equals(args[0]) || "http".equals(args[0]))) {
-                Object streamHandler = args[1];
-                if (streamHandler != null && streamHandler instanceof URLStreamHandler
-                        && !ProxyBuilder.isProxyClass(streamHandler.getClass())) {
-                    URLStreamHandlerInvocation handler = new URLStreamHandlerInvocation(streamHandler);
-                    Object result = ProxyBuilder.forClass(URLStreamHandler.class)
-                            .dexCache(appContext.getDir("dx", Context.MODE_PRIVATE))
-                            .handler(handler)
-                            .build();
-                    args[1] = result;
+            try {
+                if (method.getName() == "put" && args.length == 2 && ("https".equals(args[0]) || "http".equals(args[0]))) {
+                    Object streamHandler = args[1];
+                    if (streamHandler != null && streamHandler instanceof URLStreamHandler
+                            && !ProxyBuilder.isProxyClass(streamHandler.getClass())) {
+                        URLStreamHandlerInvocation handler = new URLStreamHandlerInvocation(streamHandler);
+                        Object result = ProxyBuilder.forClass(URLStreamHandler.class)
+                                .dexCache(appContext.getDir("dx", Context.MODE_PRIVATE))
+                                .handler(handler)
+                                .build();
+                        args[1] = result;
+                    }
                 }
+                method.setAccessible(true);
+                Object result = method.invoke(table, args);
+                return result;
+            } catch (Exception e) {
+                e.printStackTrace();
+                throw e;
             }
-            method.setAccessible(true);
-            Object result = method.invoke(table, args);
-            return result;
         }
     }
 
@@ -116,7 +121,6 @@ public class HttpUrlConnectionInjectHandler {
 
         URLStreamHandlerInvocation(Object rawURLStreamHandler) {
             this.rawURLStreamHandler = rawURLStreamHandler;
-
         }
 
         @Override
@@ -126,7 +130,7 @@ public class HttpUrlConnectionInjectHandler {
                     if (args.length >= 1 && args[0] != null) {
                         method.setAccessible(true);
                         Object urlConnection = method.invoke(rawURLStreamHandler, args);
-                        TimeDevice.getInstance().startRecord(args[0]);
+                        FunctionRecorder.getInstance().startRecord(args[0]);
                         URLConnectionInvocation handler = new URLConnectionInvocation(urlConnection);
 
                         Class targetClass = URLConnection.class;
@@ -183,23 +187,35 @@ public class HttpUrlConnectionInjectHandler {
                 Object result = method.invoke(rawURLConnection, args);
                 if (method.getName() == "getInputStream") {
                     if (!(result instanceof ProxyInputStream)) {
-                        ProxyInputStream stream = new ProxyInputStream(result, null);
+                        ProxyInputStream stream = new ProxyInputStream(result);
+                        stream.setHttpConnection(true);
                         return stream;
                     }
                 } else if (method.getName() == "getOutputStream") {
                     if (!(result instanceof ProxyOutputStream)) {
-                        ProxyOutputStream stream = new ProxyOutputStream(result, null);
+                        ProxyOutputStream stream = new ProxyOutputStream(result);
                         return stream;
                     }
                 } else if (method.getName() == "getResponseCode") {
-                    if (result.equals(200)) {
-                        TimeDevice.getInstance().endRecord(null, TimeDevice.NORMAL);
+                    int code = (int) result;
+                    if (code >= 200 & code < 300) {
+                        FunctionRecorder.getInstance().recordSuccess(FunctionRecorder.GET_RETURN_CODE
+                                , Integer.toString(code));
                     } else {
-                        TimeDevice.getInstance().endRecord(null, TimeDevice.ERROR_CODE, result);
+                        FunctionRecorder.getInstance().recordFail(FunctionRecorder.GET_RETURN_CODE,
+                                Integer.toString(code), null);
                     }
                 }
                 return result;
             } catch (Exception e) {
+                e.printStackTrace();
+                Throwable cause = e.getCause();
+                if (cause != null) {
+                    FunctionRecorder.getInstance().recordFail(FunctionRecorder.CONNECTION,
+                            "URLConnectionInvocation_" + method.getName() + ":" , cause.getMessage());
+                } else
+                    FunctionRecorder.getInstance().recordFail(FunctionRecorder.CONNECTION,
+                            "URLConnectionInvocation_" + method.getName() + ":" , e.getMessage());
                 throw e;
             }
         }

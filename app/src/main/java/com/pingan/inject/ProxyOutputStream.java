@@ -2,6 +2,7 @@ package com.pingan.inject;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.URLDecoder;
 
 /**
  * Created by yunyang on 2017/3/27.
@@ -9,11 +10,10 @@ import java.io.OutputStream;
 
 public class ProxyOutputStream extends OutputStream {
     OutputStream rawStream;
-    Object address;
+    boolean isHttp2;
 
-    public ProxyOutputStream(Object stream, Object address) {
-        rawStream = (OutputStream)stream;
-        this.address = address;
+    public ProxyOutputStream(Object stream) {
+        rawStream = (OutputStream) stream;
     }
 
     @Override
@@ -21,7 +21,8 @@ public class ProxyOutputStream extends OutputStream {
         try {
             rawStream.write(b);
         } catch (IOException e) {
-            TimeDevice.getInstance().endRecord(address, TimeDevice.OUPUT_IO);
+            FunctionRecorder.getInstance().recordFail(FunctionRecorder.OUPUT_IO,
+                    "ProxyOutputStream_" + "write" + ":", e.getMessage());
             throw e;
         }
     }
@@ -30,8 +31,12 @@ public class ProxyOutputStream extends OutputStream {
     public void write(byte[] b) throws IOException {
         try {
             rawStream.write(b);
+            if (!isHttp2) {
+                FunctionRecorder.getInstance().recordRequestBody(b, 0, b.length);
+            }
         } catch (IOException e) {
-            TimeDevice.getInstance().endRecord(address, TimeDevice.OUPUT_IO);
+            FunctionRecorder.getInstance().recordFail(FunctionRecorder.OUPUT_IO,
+                    "ProxyOutputStream_" + "write" + ":", e.getMessage());
             throw e;
         }
     }
@@ -40,8 +45,12 @@ public class ProxyOutputStream extends OutputStream {
     public void write(byte[] b, int off, int len) throws IOException {
         try {
             rawStream.write(b, off, len);
+            if (!isHttp2) {
+                FunctionRecorder.getInstance().recordRequestBody(b, off, len);
+            }
         } catch (IOException e) {
-            TimeDevice.getInstance().endRecord(address, TimeDevice.OUPUT_IO);
+            FunctionRecorder.getInstance().recordFail(FunctionRecorder.OUPUT_IO,
+                    "ProxyOutputStream_" + "write" + ":", e.getMessage());
             throw e;
         }
     }
@@ -51,7 +60,8 @@ public class ProxyOutputStream extends OutputStream {
         try {
             rawStream.flush();
         } catch (IOException e) {
-            TimeDevice.getInstance().endRecord(address, TimeDevice.OUPUT_IO);
+            FunctionRecorder.getInstance().recordFail(FunctionRecorder.OUPUT_IO,
+                    "ProxyOutputStream_" + "flush" + ":", e.getMessage());
             throw e;
         }
     }
@@ -61,7 +71,8 @@ public class ProxyOutputStream extends OutputStream {
         try {
             rawStream.close();
         } catch (IOException e) {
-            TimeDevice.getInstance().endRecord(address, TimeDevice.OUPUT_IO);
+            FunctionRecorder.getInstance().recordFail(FunctionRecorder.OUPUT_IO,
+                    "ProxyOutputStream_" + "close" + ":", e.getMessage());
             throw e;
         }
     }
